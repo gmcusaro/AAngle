@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Radians: Hashable, Codable, Anglable {
+public struct Radians: Hashable, Codable, Sendable, Anglable {
     public var rawValue: Double
     
     /// Initializes a `Radians` instance with a raw `Double` value.

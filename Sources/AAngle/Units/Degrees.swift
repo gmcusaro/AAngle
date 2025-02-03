@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Degrees: Hashable, Codable, Anglable {
+public struct Degrees: Hashable, Codable, Sendable, Anglable {
     public var rawValue: Double
     
     /// Initializes a `Degrees` instance with a raw `Double` value.

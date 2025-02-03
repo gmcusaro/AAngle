@@ -1,6 +1,6 @@
 import Foundation
 
-public struct ArcMinutes: Hashable, Codable, Anglable {
+public struct ArcMinutes: Hashable, Codable, Sendable, Anglable {
     public var rawValue: Double
     
     /// Initializes a `ArcMinutes` instance with a raw `Double` value.

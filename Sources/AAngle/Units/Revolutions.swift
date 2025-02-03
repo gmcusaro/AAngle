@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Revolutions: Hashable, Codable, Anglable {
+public struct Revolutions: Hashable, Codable, Sendable, Anglable {
     public var rawValue: Double
     
     /// Initializes a `Revolutions` instance with a raw `Double` value.
