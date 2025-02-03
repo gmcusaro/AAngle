@@ -57,7 +57,6 @@ extension Anglable {
     public static func + (lhs: Self, rhs: Int) -> Self { Self(lhs.rawValue + Double(rhs)) }
     public static func + <T: BinaryInteger>(lhs: Self, rhs: T) -> Self { Self(lhs.rawValue + Double(rhs)) }
     public static func + <T: BinaryFloatingPoint>(lhs: Self, rhs: T) -> Self { Self(lhs.rawValue + Double(rhs)) }
-//    public static func + <T: Anglable>(lhs: Self, rhs: T) -> Self { ... }
     
     public static func += (lhs: inout Self, rhs: Self) {
         lhs.rawValue += rhs.rawValue
@@ -79,14 +78,12 @@ extension Anglable {
         lhs.rawValue += lhs.rawValue + Double(rhs)
         lhs.normalize()
     }
-//    public static func += <T: Anglable>(lhs: inout Self, rhs: T) { ... }
 
     public static func - (lhs: Self, rhs: Self) -> Self { Self(lhs.rawValue - rhs.rawValue) }
     public static func - (lhs: Self, rhs: Double) -> Self { Self(lhs.rawValue - rhs) }
     public static func - (lhs: Self, rhs: Int) -> Self { Self(lhs.rawValue - Double(rhs)) }
     public static func - <T: BinaryInteger>(lhs: Self, rhs: T) -> Self { Self(lhs.rawValue - Double(rhs)) }
     public static func - <T: BinaryFloatingPoint>(lhs: Self, rhs: T) -> Self { Self(lhs.rawValue - Double(rhs)) }
-//    public static func - <T: Anglable>(lhs: Self, rhs: T) -> Self { ... }
     
     public static func -= (lhs: inout Self, rhs: Self) {
         lhs.rawValue -= rhs.rawValue
@@ -108,7 +105,6 @@ extension Anglable {
         lhs.rawValue -= lhs.rawValue + Double(rhs)
         lhs.normalize()
     }
-//    public static func -= <T: Anglable>(lhs: inout Self, rhs: T) { ... }
  
     public static func * (lhs: Self, rhs: Self) -> Self { Self(lhs.rawValue * rhs.rawValue) }
     public static func * (lhs: Self, rhs: Double) -> Self { Self(lhs.rawValue * rhs) }
