@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Gradians: Hashable, Codable, Anglable {
+public struct Gradians: Hashable, Codable, Sendable, Anglable {
     public var rawValue: Double
     
     /// Initializes a `Gradians` instance with a raw `Double` value.
@@ -50,7 +50,7 @@ public extension Gradians {
     /// Initializes a `Gradians` instance from a `Revolutions` value.
     /// - Parameter revolution: The number of revolutions to convert to gradians.
     init(_ revolution: Revolutions) {
-        self.rawValue = revolution.rawValue * Revolutions.normalizationValue
+        self.rawValue = revolution.rawValue * Gradians.normalizationValue
     }
     
     /// Initializes a `Gradians` instance from an `ArcSeconds` value.
