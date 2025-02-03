@@ -18,15 +18,15 @@ public extension AngleType {
 }
 
 public extension AngleType {
-    func instantiateAngle<T: BinaryFloatingPoint>(_ value: T) -> (any Anglable)? {
-        instantiateAngle(Double(value))
+    func instantiateAngle<T: BinaryFloatingPoint>(_ value: T) -> any Anglable {
+        self.instantiateAngle(Double(value))
     }
 
-    func instantiateAngle<T: BinaryInteger>(_ value: T) -> (any Anglable)? {
-        instantiateAngle(Double(value))
+    func instantiateAngle<T: BinaryInteger>(_ value: T) -> any Anglable {
+        self.instantiateAngle(Double(value))
     }
 
-    func instantiateAngle(_ value: Double) -> (any Anglable)? {
+    func instantiateAngle(_ value: Double) -> any Anglable {
         switch self {
         case .degrees:
             return Degrees(value)
