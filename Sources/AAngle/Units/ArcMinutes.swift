@@ -9,7 +9,7 @@ public struct ArcMinutes: Hashable, Codable, Sendable, Anglable {
         self.rawValue = rawValue
     }
     
-    public static let normalizationValue: Double = 21600.00
+    public static let normalizationValue: Double = 21_600
     
     /// Converts the `ArcMinutes` value into a `Measurement` object with a `UnitAngle` unit.
     /// This allows the `ArcMinutes` value to be used with `Measurement`-based APIs, such as those that require units of angle.

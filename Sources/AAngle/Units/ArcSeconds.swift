@@ -38,13 +38,13 @@ public extension ArcSeconds {
     /// Initializes a `ArcSeconds` instance from a `Gradians` value.
     /// - Parameter gradians: The angle in gradians to convert to arc seconds.
     init(_ gradians: Gradians) {
-        self.rawValue = gradians.rawValue * (9.0 / 10.0) * 3600
+        self.rawValue = gradians.rawValue * 0.9 * 3600
     }
     
     /// Initializes a `ArcSeconds` instance from a `Radians` value.
     /// - Parameter radians: The angle in radians to convert to arc seconds.
     init(_ radians: Radians) {
-        self.rawValue = radians.rawValue * (180 / .pi) * 3600
+        self.rawValue = radians.rawValue * (180 / .pi) * 60 * 60
     }
     
     /// Initializes a `ArcSeconds` instance from a `Degrees` value.
