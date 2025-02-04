@@ -12,7 +12,7 @@ public struct Radians: Hashable, Codable, Sendable, Anglable {
     public static let normalizationValue: Double = 2 * .pi
     
     /// Converts the `Radians` value into a `Measurement` object with a `UnitAngle` unit.
-    /// This allows the `Radians` value to be used with `Measurement`-based APIs, such as those that require units of angle.
+    /// This allows the  `Radians` value to be used with `Measurement`-based APIs, such as those that require units of angle.
     ///
     /// - Returns: A `Measurement<UnitAngle>` representing the angle in radians.
     public func toMeasurement() -> Measurement<UnitAngle> {
