@@ -6,13 +6,13 @@ public protocol Anglable: Codable, Hashable, Equatable, ExpressibleByFloatLitera
     init(_ rawValue: Double)
     
     static var normalizationValue: Double { get }
+    static var tolerance: Double { get }
     mutating func normalize()
     func normalized() -> Self
     func toMeasurement() -> Measurement<UnitAngle>
     func convertTo(_ type: AngleType) -> any Anglable
 }
 
-// Default implementations in the protocol extension
 public extension Anglable {
     init(floatLiteral value: Double) {
         self.init(value)
@@ -32,26 +32,25 @@ public extension Anglable {
 }
 
 extension Anglable {
+    public static var tolerance: Double { 1e-15 }
+
     public mutating func normalize(by value: Double) {
         guard rawValue.isFinite else { return }
         self.rawValue = rawValue.truncatingRemainder(dividingBy: value)
         if rawValue < 0.0 { rawValue += value }
     }
-    
     public func normalized(by value: Double) -> Self {
         var angle = self
         angle.normalize(by: value)
         return angle
     }
-    
     public mutating func normalize() {
         normalize(by: Self.normalizationValue)
     }
-    
     public func normalized() -> Self {
         return normalized(by: Self.normalizationValue)
     }
-    
+        
     public static func + (lhs: Self, rhs: Self) -> Self {
         var result = Self(lhs.rawValue + rhs.rawValue)
         result.normalize()
@@ -161,7 +160,7 @@ extension Anglable {
     public prefix static func - (operand: Self) -> Self { Self(-operand.rawValue) }
     
     public static func ~= (lhs: Self, rhs: Self) -> Bool {
-        let tolerance = 1e-15
+        let tolerance = Self.tolerance
         return abs(lhs.rawValue - rhs.rawValue) < tolerance
     }
     
