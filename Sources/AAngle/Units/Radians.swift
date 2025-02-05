@@ -9,6 +9,7 @@ public struct Radians: Hashable, Codable, Sendable, Anglable {
         self.rawValue = rawValue
     }
     
+    /// The normalization value used for converting and normalizing radians.
     public static let normalizationValue: Double = 2 * .pi
     
     /// Converts the `Radians` value into a `Measurement` object with a `UnitAngle` unit.

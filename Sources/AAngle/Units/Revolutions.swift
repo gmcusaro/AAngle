@@ -9,6 +9,7 @@ public struct Revolutions: Hashable, Codable, Sendable, Anglable {
         self.rawValue = rawValue
     }
     
+    /// The normalization value used for converting and normalizing revolutions.
     public static let normalizationValue: Double = 1.0
     
     /// Converts the `Revolutions` value into a `Measurement` object with a `UnitAngle` unit.

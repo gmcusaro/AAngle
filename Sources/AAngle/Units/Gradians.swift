@@ -9,6 +9,7 @@ public struct Gradians: Hashable, Codable, Sendable, Anglable {
         self.rawValue = rawValue
     }
     
+    /// The normalization value used for converting and normalizing gradians.
     public static let normalizationValue: Double = 400.0
     
     /// Converts the `Gradians` value into a `Measurement` object with a `UnitAngle` unit.

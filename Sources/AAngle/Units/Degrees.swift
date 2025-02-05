@@ -9,6 +9,7 @@ public struct Degrees: Hashable, Codable, Sendable, Anglable {
         self.rawValue = rawValue
     }
     
+    /// The normalization value used for converting and normalizing degrees.
     public static let normalizationValue: Double = 360.0
     
     /// Converts the `Degrees` value into a `Measurement` object with a `UnitAngle` unit.
