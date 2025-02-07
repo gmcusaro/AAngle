@@ -12,6 +12,8 @@ public struct ArcSeconds: Hashable, Codable, Sendable, Anglable {
     /// The normalization value used for converting and normalizing arc seconds.
     public static let normalizationValue: Double = 1_296_000
     
+    public var tolerance: Double = 1e-10
+    
     /// Converts the `ArcSeconds` value into a `Measurement` object with a `UnitAngle` unit.
     /// This allows the `ArcSeconds` value to be used with `Measurement`-based APIs, such as those that require units of angle.
     ///

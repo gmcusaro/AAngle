@@ -12,6 +12,8 @@ public struct Revolutions: Hashable, Codable, Sendable, Anglable {
     /// The normalization value used for converting and normalizing revolutions.
     public static let normalizationValue: Double = 1.0
     
+    public var tolerance: Double = 1e-10
+
     /// Converts the `Revolutions` value into a `Measurement` object with a `UnitAngle` unit.
     /// This allows the `Revolutions` value to be used with `Measurement`-based APIs, such as those that require units of angle.
     ///
