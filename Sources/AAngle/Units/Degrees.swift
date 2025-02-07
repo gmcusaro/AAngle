@@ -12,8 +12,6 @@ public struct Degrees: Hashable, Codable, Sendable, Anglable {
     /// The normalization value used for converting and normalizing degrees.
     public static let normalizationValue: Double = 360.0
     
-    public var tolerance: Double = 1e-10
-
     /// Converts the `Degrees` value into a `Measurement` object with a `UnitAngle` unit.
     /// This allows the `Degrees` value to be used with `Measurement`-based APIs, such as those that require units of angle.
     ///

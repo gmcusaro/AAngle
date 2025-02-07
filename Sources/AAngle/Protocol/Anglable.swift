@@ -6,7 +6,6 @@ public protocol Anglable: Codable, Hashable, Equatable, ExpressibleByFloatLitera
     init(_ rawValue: Double)
     
     static var normalizationValue: Double { get }
-    var tolerance: Double { get set }
     
     mutating func normalize()
     func normalized() -> Self
@@ -18,6 +17,8 @@ public protocol Anglable: Codable, Hashable, Equatable, ExpressibleByFloatLitera
 }
 
 extension Anglable {
+    static var tolerance: Double { 1e-12 }
+    
     public mutating func normalize(by value: Double) {
         guard rawValue.isFinite else { return }
         self.rawValue = rawValue.remainder(dividingBy: value)
@@ -157,10 +158,7 @@ public extension Anglable {
     static func / (lhs: Self, rhs: Int) -> Self { Self(lhs.rawValue / Double(rhs)) }
     static func / <T: BinaryInteger>(lhs: Self, rhs: T) -> Self { Self(lhs.rawValue / Double(rhs)) }
     static func / <T: BinaryFloatingPoint>(lhs: Self, rhs: T) -> Self { Self(lhs.rawValue / Double(rhs)) }
-    static func == (lhs: Self, rhs: Self) -> Bool {
-        let tolerance = lhs.tolerance
-        return abs(lhs.rawValue - rhs.rawValue) <= tolerance
-    }
+    static func == (lhs: Self, rhs: Self) -> Bool { abs(lhs.rawValue - rhs.rawValue) <= Self.tolerance }
     static func < (lhs: Self, rhs: Self) -> Bool { lhs.rawValue < rhs.rawValue}
     static func <= (lhs: Self, rhs: Self) -> Bool { lhs.rawValue <= rhs.rawValue }
     static func > (lhs: Self, rhs: Self) -> Bool { lhs.rawValue > rhs.rawValue }
@@ -228,27 +226,24 @@ public extension Anglable {
         return Self(lhs.rawValue / rhsConverted.rawValue)
     }
     static func == <T: Anglable>(lhs: Self, rhs: T) -> Bool {
-        let tolerance = lhs.tolerance
         let rhsConverted = rhs._convert(to: Self.self)
-        return abs(lhs.rawValue - rhsConverted.rawValue) <= tolerance
+        return abs(lhs.rawValue - rhsConverted.rawValue) <= Self.tolerance
     }
     static func < <T: Anglable>(lhs: Self, rhs: T) -> Bool {
         let rhsConverted = rhs._convert(to: Self.self)
         return lhs.rawValue < rhsConverted.rawValue
     }
     static func <= <T: Anglable>(lhs: Self, rhs: T) -> Bool {
-        let tolerance = lhs.tolerance
         let rhsConverted = rhs._convert(to: Self.self)
-        return lhs.rawValue <= rhsConverted.rawValue + tolerance
+        return lhs.rawValue <= rhsConverted.rawValue + Self.tolerance
     }
     static func > <T: Anglable>(lhs: Self, rhs: T) -> Bool {
         let rhsConverted = rhs._convert(to: Self.self)
         return lhs.rawValue > rhsConverted.rawValue
     }
     static func >= <T: Anglable>(lhs: Self, rhs: T) -> Bool {
-        let tolerance = lhs.tolerance
         let rhsConverted = rhs._convert(to: Self.self)
-        return lhs.rawValue >= rhsConverted.rawValue - tolerance
+        return lhs.rawValue >= rhsConverted.rawValue - Self.tolerance
     }
 }
 
