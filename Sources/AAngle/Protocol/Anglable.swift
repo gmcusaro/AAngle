@@ -6,6 +6,7 @@ public protocol Anglable: Codable, Hashable, Equatable, ExpressibleByFloatLitera
     init(_ rawValue: Double)
     
     static var normalizationValue: Double { get }
+    var tolerance: Double { get set }
     
     mutating func normalize()
     func normalized() -> Self
@@ -17,11 +18,9 @@ public protocol Anglable: Codable, Hashable, Equatable, ExpressibleByFloatLitera
 }
 
 extension Anglable {
-    public static var tolerance: Double { 1e-10 }
-
     public mutating func normalize(by value: Double) {
         guard rawValue.isFinite else { return }
-        self.rawValue = rawValue.truncatingRemainder(dividingBy: value)
+        self.rawValue = rawValue.remainder(dividingBy: value)
         if rawValue < 0.0 { rawValue += value }
     }
     public func normalized(by value: Double) -> Self {
@@ -159,7 +158,7 @@ public extension Anglable {
     static func / <T: BinaryInteger>(lhs: Self, rhs: T) -> Self { Self(lhs.rawValue / Double(rhs)) }
     static func / <T: BinaryFloatingPoint>(lhs: Self, rhs: T) -> Self { Self(lhs.rawValue / Double(rhs)) }
     static func == (lhs: Self, rhs: Self) -> Bool {
-        let tolerance = Self.tolerance
+        let tolerance = lhs.tolerance
         return abs(lhs.rawValue - rhs.rawValue) <= tolerance
     }
     static func < (lhs: Self, rhs: Self) -> Bool { lhs.rawValue < rhs.rawValue}
@@ -190,6 +189,10 @@ public extension Anglable {
     }
     
     private func _convert<T: Anglable>(to: T.Type) -> T {
+        if Self.self == T.self {
+            return self as! T
+        }
+        
         let valueInTargetUnits = self.rawValue * (T.normalizationValue / Self.normalizationValue)
         return T(valueInTargetUnits)
     }
@@ -225,7 +228,7 @@ public extension Anglable {
         return Self(lhs.rawValue / rhsConverted.rawValue)
     }
     static func == <T: Anglable>(lhs: Self, rhs: T) -> Bool {
-        let tolerance = Self.tolerance
+        let tolerance = lhs.tolerance
         let rhsConverted = rhs._convert(to: Self.self)
         return abs(lhs.rawValue - rhsConverted.rawValue) <= tolerance
     }
@@ -234,7 +237,7 @@ public extension Anglable {
         return lhs.rawValue < rhsConverted.rawValue
     }
     static func <= <T: Anglable>(lhs: Self, rhs: T) -> Bool {
-        let tolerance = Self.tolerance
+        let tolerance = lhs.tolerance
         let rhsConverted = rhs._convert(to: Self.self)
         return lhs.rawValue <= rhsConverted.rawValue + tolerance
     }
@@ -243,7 +246,7 @@ public extension Anglable {
         return lhs.rawValue > rhsConverted.rawValue
     }
     static func >= <T: Anglable>(lhs: Self, rhs: T) -> Bool {
-        let tolerance = Self.tolerance
+        let tolerance = lhs.tolerance
         let rhsConverted = rhs._convert(to: Self.self)
         return lhs.rawValue >= rhsConverted.rawValue - tolerance
     }
@@ -252,9 +255,7 @@ public extension Anglable {
 public extension Anglable {
     /// - Returns: the opposite angle of the current angle.
     func opposite() -> Self {
-        let halfCircle = Self.normalizationValue / 2  // For degrees this is 180, for radians this is π, etc.
-        
-        // Normalize the result to ensure it's within the valid range for the given angle unit
+        let halfCircle = Self.normalizationValue / 2
         var oppositeAngle = Self(self.rawValue + halfCircle)
         oppositeAngle.normalize()
         return oppositeAngle
@@ -265,6 +266,6 @@ public extension Anglable {
    /// - Parameter hypotenuse: The length of the hypotenuse.
    /// - Returns: The length of the adjacent side.
     func adjacent(to hypotenuse: Double) -> Double {
-        return hypotenuse * cos(self.rawValue)
+        return hypotenuse * cos(self._convert(to: Radians.self).rawValue) // Convert to radians for cos
     }
 }
