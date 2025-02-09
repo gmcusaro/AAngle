@@ -1,8 +1,9 @@
 import Foundation
 
 // MARK:- AngleType Protocol
-public protocol Anglable: Codable, Hashable, Equatable, ExpressibleByFloatLiteral, ExpressibleByIntegerLiteral, Sendable {
+public protocol Anglable: Codable, Hashable, Equatable, ExpressibleByFloatLiteral, ExpressibleByIntegerLiteral, CustomStringConvertible, Sendable {
     var rawValue: Double { get set }
+    
     init(_ rawValue: Double)
     
     static var normalizationValue: Double { get }
@@ -17,8 +18,12 @@ public protocol Anglable: Codable, Hashable, Equatable, ExpressibleByFloatLitera
 }
 
 extension Anglable {
-    static var tolerance: Double { 1e-12 }
-    
+    public var description: String {
+        return "\(rawValue)"
+    }
+}
+
+extension Anglable {
     public mutating func normalize(by value: Double) {
         guard rawValue.isFinite else { return }
         self.rawValue = rawValue.remainder(dividingBy: value)
@@ -38,8 +43,14 @@ extension Anglable {
 }
 
 public extension Anglable {
+    static var tolerance: Double { 1e-12 }
+
     init() {
         self.init(0.0)
+    }
+    
+    static var zero: Self {
+        .init()
     }
     
     init(floatLiteral value: Double) {
