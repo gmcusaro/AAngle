@@ -5,7 +5,10 @@ public struct Revolutions: Hashable, Codable, Sendable, Anglable {
     
     /// Initializes a `Revolutions` instance with a raw `Double` value.
     /// - Parameter rawValue: The angle in revolution as a `Double`.
+    @inlinable
     public init(_ rawValue: Double) {
+        // Ensure the rawValue is finite (not NaN or infinite)
+        precondition(rawValue.isFinite, "Revolutions must be initialized with a finite value.")
         self.rawValue = rawValue
     }
     
@@ -16,6 +19,7 @@ public struct Revolutions: Hashable, Codable, Sendable, Anglable {
     /// This allows the `Revolutions` value to be used with `Measurement`-based APIs, such as those that require units of angle.
     ///
     /// - Returns: A `Measurement<UnitAngle>` representing the angle in revolutions.
+    @inlinable
     public func toMeasurement() -> Measurement<UnitAngle> {
         return Measurement<UnitAngle>(value: rawValue, unit: .revolutions)
     }
