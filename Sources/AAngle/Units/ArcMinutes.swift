@@ -4,6 +4,7 @@ public struct ArcMinutes: Hashable, Codable, Sendable, Anglable {
     public var rawValue: Double
     
     /// Initializes a `ArcMinutes` instance with a raw `Double` value.
+    /// 
     /// - Parameter rawValue: The angle in arc minute as a `Double`.
     @inlinable
     public init(_ rawValue: Double) {
