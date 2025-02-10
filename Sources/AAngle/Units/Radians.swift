@@ -4,6 +4,7 @@ public struct Radians: Hashable, Codable, Sendable, Anglable {
     public var rawValue: Double
     
     /// Initializes a `Radians` instance with a raw `Double` value.
+    /// 
     /// - Parameter rawValue: The angle in radian as a `Double`.
     @inlinable
     public init(_ rawValue: Double) {
@@ -50,49 +51,67 @@ extension Radians {
         return tangent != 0 ? 1 / tangent : nil
     }
     
-    /// Get the secant of the angle (1 / cos)
+    /// The secant of the angle (1 / cosine).
     @inlinable
     public var secant: Double? {
         return cosine != 0 ? 1 / cosine : nil
     }
     
-    /// Get the cosecant of the angle (1 / sin)
+    /// The cosecant of the angle (1 / sine).
     @inlinable
     public var cosecant: Double? {
         return sine != 0 ? 1 / sine : nil
     }
     
-    /// Returns the opposite leg length given the hypotenuse
+    /// Computes the opposite leg of a right triangle given the hypotenuse.
+    ///
+    /// - Parameter hypotenuse: The length of the hypotenuse.
+    /// - Returns: The length of the opposite leg.
     @inlinable
     public func oppositeLeg(hypotenuse: Double) -> Double {
         return hypotenuse * sine
     }
-
-    /// Returns the adjacent leg length given the hypotenuse
+    
+    /// Computes the adjacent leg of a right triangle given the hypotenuse.
+    ///
+    /// - Parameter hypotenuse: The length of the hypotenuse.
+    /// - Returns: The length of the adjacent leg.
     @inlinable
     public func adjacentLeg(hypotenuse: Double) -> Double {
         return hypotenuse * cosine
     }
     
-    /// Returns the hypotenuse given the opposite leg length
+    /// Computes the hypotenuse given the opposite leg of a right triangle.
+    ///
+    /// - Parameter oppositeLeg: The length of the opposite leg.
+    /// - Returns: The length of the hypotenuse.
     @inlinable
     public func hypotenuse(fromOppositeLeg oppositeLeg: Double) -> Double {
         return oppositeLeg / sine
     }
     
-    /// Returns the hypotenuse given the adjacent leg length
+    /// Computes the hypotenuse given the adjacent leg of a right triangle.
+    ///
+    /// - Parameter adjacentLeg: The length of the adjacent leg.
+    /// - Returns: The length of the hypotenuse.
     @inlinable
     public func hypotenuse(fromAdjacentLeg adjacentLeg: Double) -> Double {
         return adjacentLeg / cosine
     }
     
-    /// Returns the opposite leg given the adjacent leg
+    /// Computes the opposite leg given the adjacent leg of a right triangle.
+    ///
+    /// - Parameter adjacentLeg: The length of the adjacent leg.
+    /// - Returns: The length of the opposite leg.
     @inlinable
     public func oppositeLeg(fromAdjacentLeg adjacentLeg: Double) -> Double {
         return adjacentLeg * tangent
     }
-
-    /// Returns the adjacent leg given the opposite leg
+    
+    /// Computes the adjacent leg given the opposite leg of a right triangle.
+    ///
+    /// - Parameter oppositeLeg: The length of the opposite leg.
+    /// - Returns: The length of the adjacent leg.
     @inlinable
     public func adjacentLeg(fromOppositeLeg oppositeLeg: Double) -> Double {
         return oppositeLeg / tangent
