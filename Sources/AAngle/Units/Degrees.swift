@@ -4,6 +4,7 @@ public struct Degrees: Hashable, Codable, Sendable, Anglable {
     public var rawValue: Double
     
     /// Initializes a `Degrees` instance with a raw `Double` value.
+    /// 
     /// - Parameter rawValue: The angle in degrees as a `Double`.
     @inlinable
     public init(_ rawValue: Double) {
@@ -26,15 +27,19 @@ public struct Degrees: Hashable, Codable, Sendable, Anglable {
 }
 
 extension Degrees {
-    /// Compute the opposite angle (adds 180°)
+    /// Computes the opposite angle by adding 180 degrees and normalizing.
+    ///
+    /// - Returns: The opposite angle in degrees.
     @inlinable
     public var opposite: Degrees {
          var oppositeAngle = Degrees(rawValue + Self.normalizationValue / 2)
          oppositeAngle.normalize()
          return oppositeAngle
      }
-
-    /// Compute the adjacent angles (90° and 270° away)
+    
+    /// Computes the two adjacent angles by adding and subtracting 90 degrees.
+    ///
+    /// - Returns: An array containing the two adjacent angles in degrees.
     @inlinable
     public func adjacentAngles() -> [Degrees] {
         let adj1 = (rawValue + 90).truncatingRemainder(dividingBy: Self.normalizationValue)
