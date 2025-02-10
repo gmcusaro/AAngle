@@ -7,6 +7,7 @@ public protocol Anglable: Codable, Hashable, Equatable, ExpressibleByFloatLitera
     var rawValue: Double { get set }
     
     /// Initializes an `Anglable` instance with a raw value.
+    ///
     /// - Parameter rawValue: The raw value of the angle in degrees.
     init(_ rawValue: Double)
     
@@ -17,14 +18,17 @@ public protocol Anglable: Codable, Hashable, Equatable, ExpressibleByFloatLitera
     mutating func normalize()
     
     /// Returns a normalized version of the angle.
+    ///
     /// - Returns: A normalized version of the angle.
     func normalized() -> Self
     
     /// Converts the angle to a `Measurement<UnitAngle>`.
+    ///
     /// - Returns: A `Measurement<UnitAngle>` representing the angle.
     func toMeasurement() -> Measurement<UnitAngle>
     
     /// Initializes an `Anglable` instance from another `Anglable` type.
+    /// 
     /// - Parameter angle: The angle to convert.
     init<T: Anglable>(_ angle: T)
 }
@@ -71,6 +75,7 @@ public extension Anglable {
         return "\(rawValue)"
     }
     
+    /// String to debug of the angle.
     var debugDescription: String {
         "Angle(\(type(of: self))): rawValue = \(rawValue), normalized = \(self.normalized().rawValue)"
     }
