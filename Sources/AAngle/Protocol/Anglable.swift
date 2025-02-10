@@ -3,7 +3,7 @@ import Foundation
 // MARK:- AngleType Protocol
 
 /// A protocol that defines a type that can represent an angle.
-public protocol Anglable: Codable, Hashable, Equatable, ExpressibleByFloatLiteral, ExpressibleByIntegerLiteral, CustomStringConvertible, Sendable {
+public protocol Anglable: Codable, Hashable, Equatable, ExpressibleByFloatLiteral, ExpressibleByIntegerLiteral, CustomStringConvertible, CustomDebugStringConvertible, Sendable {
     var rawValue: Double { get set }
     
     /// Initializes an `Anglable` instance with a raw value.
@@ -69,6 +69,10 @@ public extension Anglable {
     /// String representation of the angle.
     var description: String {
         return "\(rawValue)"
+    }
+    
+    var debugDescription: String {
+        "Angle(\(type(of: self))): rawValue = \(rawValue), normalized = \(self.normalized().rawValue)"
     }
 
     /// Initializes an `Anglable` instance with a default value of 0.0.
