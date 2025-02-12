@@ -32,9 +32,9 @@ extension Degrees {
     /// - Returns: The opposite angle in degrees.
     @inlinable
     public var opposite: Degrees {
-         var oppositeAngle = Degrees(rawValue + Self.normalizationValue / 2)
-         oppositeAngle.normalize()
-         return oppositeAngle
+        var oppositeAngle = Degrees(180.0 - self.rawValue)
+        oppositeAngle.normalize()
+        return oppositeAngle
      }
     
     /// Computes the two adjacent angles by adding and subtracting 90 degrees.
