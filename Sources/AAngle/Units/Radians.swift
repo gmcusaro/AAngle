@@ -14,7 +14,7 @@ public struct Radians: Hashable, Codable, Sendable, Anglable {
     }
     
     /// The normalization value used for converting and normalizing radians.
-    public static let normalizationValue: Double = 2 * .pi
+    public static let normalizationValue: Double = (2 * .pi)
     
     /// Converts the `Radians` value into a `Measurement` object with a `UnitAngle` unit.
     /// This allows the  `Radians` value to be used with `Measurement`-based APIs, such as those that require units of angle.
@@ -48,19 +48,19 @@ extension Radians {
     /// Get the cotangent of the angle (1 / tan)
     @inlinable
     public var cotangent: Double? {
-        return tangent != 0 ? 1 / tangent : nil
+        return abs(tangent) <= Radians.tolerance ? nil : 1 / tangent
     }
     
     /// The secant of the angle (1 / cosine).
     @inlinable
     public var secant: Double? {
-        return cosine != 0 ? 1 / cosine : nil
+        return abs(cosine) <= Radians.tolerance ? nil : 1 / cosine
     }
     
     /// The cosecant of the angle (1 / sine).
     @inlinable
     public var cosecant: Double? {
-        return sine != 0 ? 1 / sine : nil
+        return abs(sine) <= Radians.tolerance ? nil : 1 / sine
     }
     
     /// Computes the opposite leg of a right triangle given the hypotenuse.
@@ -84,19 +84,19 @@ extension Radians {
     /// Computes the hypotenuse given the opposite leg of a right triangle.
     ///
     /// - Parameter oppositeLeg: The length of the opposite leg.
-    /// - Returns: The length of the hypotenuse.
+    /// - Returns: The length of the hypotenuse.  Returns nil if sine is close to zero.
     @inlinable
-    public func hypotenuse(fromOppositeLeg oppositeLeg: Double) -> Double {
-        return oppositeLeg / sine
+    public func hypotenuse(fromOppositeLeg oppositeLeg: Double) -> Double? {
+        return abs(sine) <= Radians.tolerance ? nil : oppositeLeg / sine
     }
     
     /// Computes the hypotenuse given the adjacent leg of a right triangle.
     ///
     /// - Parameter adjacentLeg: The length of the adjacent leg.
-    /// - Returns: The length of the hypotenuse.
+    /// - Returns: The length of the hypotenuse. Returns nil if cosine is close to zero.
     @inlinable
-    public func hypotenuse(fromAdjacentLeg adjacentLeg: Double) -> Double {
-        return adjacentLeg / cosine
+    public func hypotenuse(fromAdjacentLeg adjacentLeg: Double) -> Double? {
+        return abs(cosine) <= Radians.tolerance ? nil : adjacentLeg / cosine
     }
     
     /// Computes the opposite leg given the adjacent leg of a right triangle.
@@ -111,9 +111,9 @@ extension Radians {
     /// Computes the adjacent leg given the opposite leg of a right triangle.
     ///
     /// - Parameter oppositeLeg: The length of the opposite leg.
-    /// - Returns: The length of the adjacent leg.
+    /// - Returns: The length of the adjacent leg, or nil if tangent is close to zero.
     @inlinable
-    public func adjacentLeg(fromOppositeLeg oppositeLeg: Double) -> Double {
-        return oppositeLeg / tangent
+    public func adjacentLeg(fromOppositeLeg oppositeLeg: Double) -> Double? {
+        return abs(tangent) <= Radians.tolerance ? nil : oppositeLeg / tangent
     }
 }
