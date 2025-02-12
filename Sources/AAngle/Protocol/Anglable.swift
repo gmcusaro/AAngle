@@ -223,7 +223,7 @@ public extension Anglable {
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     static func += <T: BinaryFloatingPoint>(lhs: inout Self, rhs: T) {
-        lhs.rawValue += lhs.rawValue + Double(rhs)
+        lhs.rawValue += Double(rhs)
         lhs.normalize()
     }
     
