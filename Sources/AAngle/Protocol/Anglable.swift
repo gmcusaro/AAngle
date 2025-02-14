@@ -67,7 +67,7 @@ extension Anglable {
 }
 
 public extension Anglable {
-    /// The tolerance value used for equality comparisons.
+    ///  The *default* tolerance value
     static var tolerance: Double { 1e-12 }
     
     /// String representation of the angle.

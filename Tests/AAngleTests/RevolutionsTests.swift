@@ -64,7 +64,4 @@ let arrRev: [Revolutions] = [
     #expect(rev <= Revolutions(0.7500001))
     #expect(rev >= Degrees(270.0))
     #expect(rev >= Revolutions(0.2499999999999))
-    
-    let deg: Degrees = (rev.convertTo(.degrees) as? Degrees) ?? Degrees.zero
-    print(AngleType.degrees.initAngle(Revolutions(0.25)))
 }
