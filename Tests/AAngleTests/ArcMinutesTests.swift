@@ -34,43 +34,31 @@ let arrArcMin: [ArcMinutes] = [
     }
 }
 
-@Test func testAdd() throws {
-    let arc = ArcMinutes(1.0)
-    let increment: Int = 60
-    let total = arc + increment
-    #expect((total.rawValue - 61).magnitude < 0.000001)
+@Test func testNormalizeArcMinutes() throws {
+    #expect(ArcMinutes(270.000).normalized() == ArcMinutes(5400.0))
+    #expect(ArcMinutes(432.000).normalized() == ArcMinutes(0.0))
+    #expect(ArcMinutes(24000.0).normalized() == ArcMinutes(218.4))
 }
 
-@Test func testAddEqual() throws {
-    let increment: Int = 60
-    
-    var arc = ArcMinutes(0.0)
-    arc += increment
-    #expect(arc == ArcMinutes(60))
-
-    var arc2 = ArcMinutes(0.0)
-    arc2 += Double(increment)
-    let expectedValue = Double(increment)
-    let accuracy: Double = 0.000001
-    #expect(abs(arc2.rawValue - expectedValue) < accuracy)
-}
-
-@Test func testMinus() throws {
-    let arc = ArcMinutes(1.0)
-    let increment: Int = 60
-    #expect((arc + increment == ArcMinutes(61)))
-}
-
-@Test func testMinusEqual() throws {
-    var arc = ArcMinutes(0.0)
-    let increment: Int = 60
-    arc += increment
-    #expect(arc.rawValue == Double(increment))
-}
-
-@Test func addTypes() throws {
-    let deg = Degrees(90)
-    let rev = Revolutions(0.25)
-    let sum: Degrees = deg + rev
-    #expect(sum == Degrees(180))
+@Test func testArcMinutesOperator() throws {
+    var arcMin: ArcMinutes = .zero
+    arcMin += 5400.0
+    #expect(arcMin + Int(1000) == ArcMinutes(6400.0))
+    #expect(arcMin + Float(400) == ArcMinutes(5800.0))
+    #expect(arcMin + Revolutions(0.5) == ArcMinutes(16200.0))
+    #expect(arcMin - Int(1000) == ArcMinutes(4400.0))
+    #expect(arcMin - Float(400) == ArcMinutes(5000.0))
+    #expect(arcMin - Degrees(90.0) == ArcMinutes(0.0))
+    arcMin -= 400.0
+    #expect(arcMin == ArcMinutes(5000.0))
+    arcMin += 400.0
+    #expect(arcMin == ArcMinutes(5400.0))
+    #expect(arcMin * 2 == ArcMinutes(10800.0))
+    #expect(arcMin / 4 == ArcMinutes(1350.0))
+    #expect(arcMin < Revolutions(0.251111))
+    #expect(arcMin > Revolutions(0.249999))
+    #expect(arcMin <= Revolutions(0.25))
+    #expect(arcMin >= Revolutions(0.25))
+    #expect(arcMin == Gradians(100.0))
+    #expect(arcMin == Degrees(90.0))
 }
