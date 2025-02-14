@@ -16,75 +16,80 @@
 
 ## Installation
 
-You can install the `AAngle` package via [Swift Package Manager](https://www.swift.org/documentation/package-manager/).
+You can install the `AAngle` package via [Swift Package Manager](https://www.swift.org/documentation/package-manager/). The supported platforms are:
+    ```swift
+    platforms: [
+        .macOS(.v14),
+        .iOS(.v17),
+        .visionOS(.v2),
+        .watchOS(.v10),
+        .tvOS(.v17)
+    ]
+    ```
 
 **Using Xcode:**
+    1.  Go to **File** > **Add Packages...**
+    2.  Enter the repository URL: `https://github.com/gmcusaro/AAngle.git` (Replace with your actual repository URL when you create it).
+    3.  Choose "Up to Next Major Version" and specify `1.0.0` (or your initial version) as the starting version.
+    4.  Click "Add Package".
 
-1.  Go to **File** > **Add Packages...**
-2.  Enter the repository URL: `https://github.com/gmcusaro/AAngle.git` (Replace with your actual repository URL when you create it).
-3.  Choose "Up to Next Major Version" and specify "1.0.0" (or your initial version) as the starting version.
-4.  Click "Add Package".
-
-**Using `Package.swift`:**
-
+**Using [Packages](https://www.swift.org/packages):**
 Add the following dependency to your `Package.swift` file:
-
-```swift
-dependencies: [
-    .package(url: "https://github.com/gmcusaro/AAngle.git", from: "1.0.0")
-]
-```
+    ```swift
+    dependencies: [
+        .package(url: "https://github.com/gmcusaro/AAngle.git", from: "1.0.0")
+    ]
+    ```
 
 ## Usage examples
+    ```swift
+    import AAngle
 
-```swift
-import AAngle
+    // Create angles
+    let degrees = Degrees(90)
+    let radians = Radians(Double.pi / 2)
+    let revolutions = AngleType.revolutions.initAngle(degress)
+    let grads = Gradians() // Init 0.0 grad
+    let arcMinutes = AngleType.zero // Init 0.0 arc minutes
+    let arcSeconds = AngleType.arcSeconds.initAngle(324000.00000000) // Init 324000.00000000 arc seconds
+    
+    // Angle conversions
+    let degreesFromRadians = Degrees(radians) // Convert radians to degrees
+    let degreesFromRevolutions: Degrees = rev.convertTo(.degrees) as? Degrees // Convert to any Anglable type
+    let
 
-// Create angles
-let degrees = Degrees(90)
-let radians = Radians(Double.pi / 2)
-let grads = Gradians() // Init 0.0 grad
-let revolutions = Revolutions.zero // Init 0.0 rev
-let arcMinutes = ArcMinutes(5400)
-let arcSeconds = ArcSeconds(324000)
+    // Arithmetic operators
+    let sum = degrees + radians // Adds, converting to the type of the left-hand side (Degrees)
+    let difference = radians - degrees // Subtracts, converting to the type of the left-hand side (Radians)
+    let product = degrees * 2.0 // Multiplies (not normalized)
+    let quotient = radians / 2.0 // Divides (not normalized)
+    var mutableDegrees = Degrees(180)
+    mutableDegrees += radians
+    mutableDegrees -= Int(90)
+    mutableDegrees -= Float(45)
 
-// Angle conversions
-let degreesFromRadians = Degrees(radians) // Convert radians to degrees
-let gradsFromDegrees: Gradians = grads.convertTo(.gradians) //Convert to gradians and assign the new angle value to Gradians type.
-let revolutionsFromDegrees = degrees.convertTo(.revolutions) //Convert to any Anglable type
+    // Comparisons
+    print(degrees < Degrees(UInt32(90.0))) // false
+    print(degrees == Revolutions) // falses (comparison after conversion)
 
-// Arithmetic operators
-let sum = degrees + radians // Adds, converting to the type of the left-hand side (Degrees)
-let difference = radians - degrees // Subtracts, converting to the type of the left-hand side (Radians)
-let product = degrees * 2.0 // Multiplies (not normalized)
-let quotient = radians / 2.0 // Divides (not normalized)
-var mutableDegrees = Degrees(180)
-mutableDegrees += radians
-mutableDegrees -= 90
-print(mutableDegrees)
+    // Normalization
+    var largeAngle = Degrees(Int(720))
+    largeAngle.normalize() // largeAngle is now 0
+    let normalizedAngle = largeAngle.normalized() // Creates a new normalized instance.
 
-// Comparisons
-print(degrees < Degrees(UInt32(89.0))) // false
-print(degrees == radians) // true (comparison after conversion)
+    // Using Measurement
+    let measurement = degrees.toMeasurement()
+    print(measurement) // Output: 90.0 deg
 
-// Normalization
-var largeAngle = Degrees(Int(720))
-largeAngle.normalize() // largeAngle is now 0
-let normalizedAngle = largeAngle.normalized() // Creates a new normalized instance.
+    // Accessing to rawValue, description and debugDescription
+    print(degrees.rawValue) // 90.0
+    print(degrees.description) // "90.0"
+    print(degrees.debugDescription) // "Angle(Degrees): rawValue = 90.0, normalized = 90.0"
+    ```
 
-// Using Measurement
-let measurement = degrees.toMeasurement()
-print(measurement) // Output: 90.0 deg
+## Operators
 
-// Accessing to rawValue, description and debugDescription
-print(degrees.rawValue) // 90.0
-print(degrees.description) // "90.0"
-print(degrees.debugDescription) // "Angle(Degrees): rawValue = 90.0, normalized = 90.0"
-```
-
-## Operators and Normalization
-
-The `Angle` types are designed with a core principle: to represent normalized angles whenever appropriate.  Normalization ensures consistency and prevents ambiguity by keeping angles within a predefined range (e.g., 0-360 degrees for `Degrees`, 0-2π radians for `Radians`).  However, some operations, like multiplication and division by scalars, can produce mathematically valid results *outside* this standard range, and preserving these values can be important.  Therefore, the operators in the `Angle` package have specific normalization behaviors:
+The `AAngle` types are designed with a core principle: to represent normalized angles whenever appropriate.  Normalization ensures consistency and prevents ambiguity by keeping angles within a predefined range (e.g., 0-360 degrees for `Degrees`, 0-2π radians for `Radians`).  However, some operations, like multiplication and division by scalars, can produce mathematically valid results *outside* this standard range, and preserving these values can be important.  Therefore, the operators in the `Angle` package have specific normalization behaviors:
 
 **`+, -` Addition and Subtraction:**  These operators *always* produce normalized results. The resulting angle is normalized to the standard range of the *left-hand side* operand's type.  This ensures that adding or subtracting angles always results in a value within the expected bounds.  The type of the result is the same as the type of the left-hand side operand.
 
@@ -141,6 +146,38 @@ The `Angle` types are designed with a core principle: to represent normalized an
     print(degrees < radians)  // false
     ```
 
+### Normalization
+
+The `Anglable` protocol provides methods for normalizing angle values, ensuring they fall within a defined range.  Normalization is crucial for consistency and preventing ambiguity in angle representations. Each conforming type (e.g., `Degrees`, `Radians`) defines its own `normalizationValue` which is a `static` property of the `Anglable` protocol.
+
+**`normalize()`**: Normalizes the angle *in place* to the standard range defined by the conforming type's `normalizationValue`.  For example, for `Degrees`, this would be the range 0 to 360 (exclusive of 360). The `normalize()` methods modify the existing angle.
+
+    ```swift
+    var myAngle = Degrees(450)
+    myAngle.normalize() // myAngle is now 90
+    ```
+
+**`normalized() -> Self`**: Returns a *new* `Anglable` instance containing the normalized value.  The original instance is *not* modified. The `normalized()` methods create a new, normalized angle instance.
+
+    ```swift
+    let myAngle = Degrees(450)
+    let normalizedAngle = myAngle.normalized() // normalizedAngle is 90, myAngle is still 450
+    ```
+
+**`normalize(by value: Double)`***: Normalizes the angle *in place* using a custom normalization value. This is useful if you need a range other than the default. The `normalize()` methods modify the existing angle.
+
+    ```swift
+    var myAngle = Radians(3 * Double.pi) // 3π
+    myAngle.normalize(by: Double.pi) // myAngle is now π (normalized to the range 0 to π)
+    ```
+
+**`normalized(by value: Double) -> Self`**: Returns a *new* `Anglable` instance, normalized using the provided custom normalization value. The original instance is not modified. The `normalized()` methods create a new, normalized angle instance.
+
+    ```swift
+    let myAngle = Radians(3 * Double.pi) // 3π
+    let normalizedAngle = myAngle.normalized(by: Double.pi) // normalizedAngle is π, myAngle is still 3π
+    ```
+
 ### Key Design Rationale:
 
 **Normalization by Default (where appropriate):** Addition, subtraction, and assignment operations are normalized by default to maintain the core principle of representing angles within a standard range. This avoids common errors and ensures consistency.
@@ -152,7 +189,54 @@ The `Angle` types are designed with a core principle: to represent normalized an
 
 ## Trigonometry
 
-Add text
+`AAngle` provides a set of trigonometric functions for **Radians** type.
+
+### Basic Trigonometric Functions
+
+- **Sine**: Returns the sine of the angle.
+- **Cosine**: Returns the cosine of the angle.
+- **Tangent**: Returns the tangent of the angle.
+- **Cotangent**: Returns the cotangent of the angle (1 / tangent). Returns nil if the tangent is zero.
+- **Secant**: Returns the secant of the angle (1 / cosine). Returns nil if the cosine is zero.
+- **Cosecant**: Returns the cosecant of the angle (1 / sine). Returns nil if the sine is zero.
+
+    ```swift
+    import AAngle
+
+    let radians = Radians(Degrees(45))
+
+    // Basic trigonometric functions
+    print(radians.sine)      // 0.7071067811865475
+    print(radians.cosine)    // 0.7071067811865476
+    print(radians.tangent)   // 0.9999999999999999
+    print(radians.cotangent) // Optional(1.0000000000000002)
+    print(radians.secant)    // Optional(1.414213562373095)
+    print(radians.cosecant)  // Optional(1.414213562373095)
+    ```
+
+### Triangle Calculations
+
+- **Opposite Leg** `oppositeLeg(hypotenuse:)`: Computes the length of the opposite leg of a right triangle given the hypotenuse.
+- **Adjacent Leg** `adjacentLeg(hypotenuse:)`: Computes the length of the adjacent leg of a right triangle given the hypotenuse.
+- **Hypotenuse** `hypotenuse(fromOppositeLeg:)`: Computes the hypotenuse of a right triangle given the opposite leg.
+- **Hypotenuse** `hypotenuse(fromAdjacentLeg:)`: Computes the hypotenuse of a right triangle given the adjacent leg.
+- **Opposite Leg** `oppositeLeg(fromAdjacentLeg:)`: Computes the opposite leg of a right triangle given the adjacent leg.
+- **Adjacent Leg** `adjacentLeg(fromOppositeLeg:)`: Computes the adjacent leg of a right triangle given the opposite leg.
+
+    ```swift
+    import AAngle
+
+    let radians = Radians(Double.pi / 4) // 45 degrees
+
+    // Triangle calculations
+    let hypotenuse = 10.0
+    print(radians.oppositeLeg(hypotenuse: hypotenuse)) // 7.0710678118654755
+    print(radians.adjacentLeg(hypotenuse: hypotenuse)) // 7.071067811865476
+    print(radians.hypotenuse(fromOppositeLeg: 5.0))    // 7.0710678118654755
+    print(radians.hypotenuse(fromAdjacentLeg: 5.0))    // 7.071067811865476
+    print(radians.oppositeLeg(fromAdjacentLeg: 5.0))   // 5.0
+    print(radians.adjacentLeg(fromOppositeLeg: 5.0))   // 5.0
+    ```
 
 ## License
 
