@@ -181,9 +181,13 @@ The `Anglable` protocol provides methods for normalizing angle values, ensuring 
 ### Key Design Rationale:
 
 **Normalization by Default (where appropriate):** Addition, subtraction, and assignment operations are normalized by default to maintain the core principle of representing angles within a standard range. This avoids common errors and ensures consistency.
+
 **Preserving Magnitude (when necessary):**  Multiplication and division (without assignment) preserve the magnitude of the result, even if it falls outside the normalized range. This is essential for many mathematical operations where the "unwrapped" angle is significant.
+
 **Type Consistency:**  Binary operations (`+`, `-`) return a value of the *same type* as the left-hand side operand. This makes the behavior predictable and helps prevent accidental type changes.
+
 **Cross-Type Comparisons:** Comparison operators handle different `Anglable` types correctly by performing internal conversions.
+
 **Tolerance:** The comparison operations are performed using a tolerance to prevent errors due to floating-point precision limitations.
 
 
