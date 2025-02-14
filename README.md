@@ -50,9 +50,9 @@ Add the following dependency to your `Package.swift` file:
     let radians = Radians(Double.pi / 2)
     let revolutions = AngleType.revolutions.initAngle(degress)
     let grads = Gradians() // Init 0.0 grad
-    let arcMinutes = AngleType.zero // Init 0.0 arc minutes
+    let arcMinutes = ArcMinutes.zero // Init 0.0 arc minutes
     let arcSeconds = AngleType.arcSeconds.initAngle(324000.00000000) // Init 324000.00000000 arc seconds
-    
+
     // Angle conversions
     let degreesFromRadians = Degrees(radians) // Convert radians to degrees
     let degreesFromRevolutions: Degrees = rev.convertTo(.degrees) as? Degrees // Convert to any Anglable type
