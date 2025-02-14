@@ -244,4 +244,4 @@ The `Anglable` protocol provides methods for normalizing angle values, ensuring 
 
 ## License
 
-This package is licensed under the MIT License. See LICENSE for more information.
+This package is licensed under the Apache License. See [LICENSE](https://github.com/gmcusaro/AAngle/blob/main/LICENSE) for more information.
