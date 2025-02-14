@@ -5,11 +5,11 @@ import PackageDescription
 let package = Package(
     name: "AAngle",
     platforms: [
-        .macOS(.v14),
-        .iOS(.v17),
-        .visionOS(.v2),
-        .watchOS(.v10),
-        .tvOS(.v17)
+        .macOS(.v12),
+        .iOS(.v15),
+        .visionOS(.v1),
+        .watchOS(.v8),
+        .tvOS(.v15)
     ],
     products: [
         .library(
