@@ -5,14 +5,22 @@
 ## Features
 
 **Angle Types:** Supports various angle types: `Radians`, `Degrees`, `Gradians`, `Revolutions`, `ArcSeconds`, and `ArcMinutes`.
+
 **Normalization:** Built-in normalization to keep angles within a specific range (e.g., 0-360 degrees for `Degrees`).
+
 **Arithmetic Operations:** Supports addition, subtraction, multiplication, and division, with consistent normalization behavior.
+
 **Angle Conversion:** Easily convert between different angle types.
+
 **Measurement Support:** Convert angle values to Swift's `Measurement<UnitAngle>` type for use with the Foundation framework's [units](https://developer.apple.com/documentation/foundation/unitangle).
+
 **Type-Safe Units:** Uses an `AngleType` enum to represent units, ensuring type safety and avoiding string-based errors.
+
 **Extensible Protocol:** Designed with the `Anglable` protocol to make it easy to add custom angle types.
+
 **Complete Operators Support:** Supports all basic arithmetic operators, comparison operators, including `==`, `<`, `<=`, `>`, `>=`, as well as compound assignment operators like `+=`, `-=`, ensuring correct normalization behavior.
-**Trigonometry:** Add text
+
+**Trigonometry:** A set of basic trigonometric functions: `sine`, `cosine`, `tangent`, `cotangent`, `secant`, `cosecant`. Triangle calculations: `oppositeLeg(hypotenuse:)`, `adjacentLeg(hypotenuse:)`, `hypotenuse(fromOppositeLeg:)`, `hypotenuse(fromAdjacentLeg:)`, `oppositeLeg(fromAdjacentLeg:)`, `adjacentLeg(fromOppositeLeg:)`.
 
 ## Installation
 
@@ -211,12 +219,12 @@ print(radians.cosecant)  // Optional(1.414213562373095)
 
 ### Triangle Calculations
 
-- **Opposite Leg** `oppositeLeg(hypotenuse:)`: Computes the length of the opposite leg of a right triangle given the hypotenuse.
-- **Adjacent Leg** `adjacentLeg(hypotenuse:)`: Computes the length of the adjacent leg of a right triangle given the hypotenuse.
-- **Hypotenuse** `hypotenuse(fromOppositeLeg:)`: Computes the hypotenuse of a right triangle given the opposite leg.
-- **Hypotenuse** `hypotenuse(fromAdjacentLeg:)`: Computes the hypotenuse of a right triangle given the adjacent leg.
-- **Opposite Leg** `oppositeLeg(fromAdjacentLeg:)`: Computes the opposite leg of a right triangle given the adjacent leg.
-- **Adjacent Leg** `adjacentLeg(fromOppositeLeg:)`: Computes the adjacent leg of a right triangle given the opposite leg.
+- **Opposite Leg** `oppositeLeg(hypotenuse:)` Computes the length of the opposite leg of a right triangle given the hypotenuse.
+- **Adjacent Leg** `adjacentLeg(hypotenuse:)` Computes the length of the adjacent leg of a right triangle given the hypotenuse.
+- **Hypotenuse** `hypotenuse(fromOppositeLeg:)` Computes the hypotenuse of a right triangle given the opposite leg.
+- **Hypotenuse** `hypotenuse(fromAdjacentLeg:)` Computes the hypotenuse of a right triangle given the adjacent leg.
+- **Opposite Leg** `oppositeLeg(fromAdjacentLeg:)` Computes the opposite leg of a right triangle given the adjacent leg.
+- **Adjacent Leg** `adjacentLeg(fromOppositeLeg:)` Computes the adjacent leg of a right triangle given the opposite leg.
 
 ```swift
 import AAngle
