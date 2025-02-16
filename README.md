@@ -2,6 +2,13 @@
 
 `Angle` is a Swift package that provides a flexible and extensible way to work with different types of angles, including [degrees](https://en.wikipedia.org/wiki/Degree_(angle)), [radians](https://en.wikipedia.org/wiki/Radian), [gradians](https://en.wikipedia.org/wiki/Gradian), [revolutions/turns](https://en.wikipedia.org/wiki/Turn_(angle)), [arc minutes](https://en.wikipedia.org/wiki/Minute_and_second_of_arc), and [arc seconds](https://en.wikipedia.org/wiki/Minute_and_second_of_arc).
 
+* [Features](#features)
+* [Installation](#installation)
+* [Basic Usage](#basic-usage)
+* [Operators](#operators)
+* [Normalization](#normalization)
+* [Trigonometry](#trigonometry)
+
 ## Features
 
 **Angle Types:** Supports various angle types: `Radians`, `Degrees`, `Gradians`, `Revolutions`, `ArcSeconds`, and `ArcMinutes`.
@@ -40,7 +47,8 @@ dependencies: [
 ]
 ```
 
-## Usage examples
+## Basic Usage
+
 ```swift
 import AAngle
 
@@ -55,26 +63,6 @@ let arcSeconds = AngleType.arcSeconds.initAngle(324000.00000000) // Init 324000.
 // Angle conversions
 let degreesFromRadians = Degrees(radians) // Convert radians to degrees
 let degreesFromRevolutions: Degrees = rev.convertTo(.degrees) as? Degrees // Convert to any Anglable type
-let
-
-// Arithmetic operators
-let sum = degrees + radians // Adds, converting to the type of the left-hand side (Degrees)
-let difference = radians - degrees // Subtracts, converting to the type of the left-hand side (Radians)
-let product = degrees * 2.0 // Multiplies (not normalized)
-let quotient = radians / 2.0 // Divides (not normalized)
-var mutableDegrees = Degrees(180)
-mutableDegrees += radians
-mutableDegrees -= Int(90)
-mutableDegrees -= Float(45)
-
-// Comparisons
-print(degrees < Degrees(UInt32(90.0))) // false
-print(degrees == Revolutions) // falses (comparison after conversion)
-
-// Normalization
-var largeAngle = Degrees(Int(720))
-largeAngle.normalize() // largeAngle is now 0
-let normalizedAngle = largeAngle.normalized() // Creates a new normalized instance.
 
 // Using Measurement
 let measurement = degrees.toMeasurement()
@@ -145,7 +133,20 @@ print(degrees == radians) // true (comparison after converting radians to degree
 print(degrees < radians)  // false
 ```
 
-### Normalization
+
+```swift
+// Arithmetic operators
+let sum = degrees + radians // Adds, converting to the type of the left-hand side (Degrees)
+let difference = radians - degrees // Subtracts, converting to the type of the left-hand side (Radians)
+let product = degrees * 2.0 // Multiplies (not normalized)
+let quotient = radians / 2.0 // Divides (not normalized)
+var mutableDegrees = Degrees(180)
+mutableDegrees += radians
+mutableDegrees -= Int(90)
+mutableDegrees -= Float(45)
+```
+
+## Normalization
 
 The `Anglable` protocol provides methods for normalizing angle values, ensuring they fall within a defined range.  Normalization is crucial for consistency and preventing ambiguity in angle representations. Each conforming type (e.g., `Degrees`, `Radians`) defines its own `normalizationValue` which is a `static` property of the `Anglable` protocol.
 
