@@ -2,6 +2,9 @@
 
 `Angle` is a Swift package that provides a flexible and extensible way to work with different types of angles, including [degrees](https://en.wikipedia.org/wiki/Degree_(angle)), [radians](https://en.wikipedia.org/wiki/Radian), [gradians](https://en.wikipedia.org/wiki/Gradian), [revolutions/turns](https://en.wikipedia.org/wiki/Turn_(angle)), [arc minutes](https://en.wikipedia.org/wiki/Minute_and_second_of_arc), and [arc seconds](https://en.wikipedia.org/wiki/Minute_and_second_of_arc).
 
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fgmcusaro%2FAAngle%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/gmcusaro/AAngle)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fgmcusaro%2FAAngle%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/gmcusaro/AAngle)
+
 * [Features](#features)
 * [Installation](#installation)
 * [Basic Usage](#basic-usage)
