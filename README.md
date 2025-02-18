@@ -35,7 +35,7 @@ You can install the `AAngle` package via [Swift Package Manager](https://www.swi
 
 **Using Xcode:**
 1.  Go to **File** > **Add Packages...**
-2.  Enter the repository URL: `https://github.com/gmcusaro/AAngle.git` (Replace with your actual repository URL when you create it).
+2.  Enter the repository URL: `https://github.com/gmcusaro/AAngle.git`.
 3.  Choose "Up to Next Major Version" and specify `1.0.0` (or your initial version) as the starting version.
 4.  Click "Add Package".
 
@@ -45,6 +45,10 @@ Add the following dependency to your `Package.swift` file:
 dependencies: [
     .package(url: "https://github.com/gmcusaro/AAngle.git", from: "1.0.0")
 ]
+```
+And then adding the product to any target that needs access to the library:
+```
+.product(name: "AAngle", package: "AAngle"),
 ```
 
 ## Basic Usage
@@ -62,7 +66,7 @@ let arcSeconds = AngleType.arcSeconds.initAngle(324000.00000000) // Init 324000.
 
 // Angle conversions
 let degreesFromRadians = Degrees(radians) // Convert radians to degrees
-let degreesFromRevolutions: Degrees = rev.convertTo(.degrees) as? Degrees // Convert to any Anglable type
+let degreesFromRevolutions: Degrees = revolutions.convertTo(.degrees) as? Degrees // Convert to any Anglable type
 
 // Using Measurement
 let measurement = degrees.toMeasurement()
@@ -92,7 +96,7 @@ let difference = radians - degrees // Result: Radians(-4.537856055185257)
 ```swift
 var myAngle = Degrees(350)
 myAngle += 90  // myAngle is now 80 (normalized)
-myAngle -= 100 // myAngle is now 340 (normalized)
+myAngle -= Revolutions(0.25) // myAngle is now 340 (normalized)
 ```
 
 **`*` Multiplication:**  Multiplication by a scalar (Double, Int, etc.) is *not* normalized.  This is because multiplying an angle by a value can legitimately produce an angle outside the standard range (e.g., 2 * 180 degrees = 360 degrees, 3 * 180 degrees = 540 degrees).  Preserving these values is often mathematically necessary.
@@ -129,21 +133,10 @@ degrees /= 2  // Result: Degrees(90) (normalized)
 ```swift
 let degrees = Degrees(90)
 let radians = Radians(Double.pi / 2)
+print(degrees == 180)     // true
 print(degrees == radians) // true (comparison after converting radians to degrees)
+print(degrees < Int(89))  // false
 print(degrees < radians)  // false
-```
-
-
-```swift
-// Arithmetic operators
-let sum = degrees + radians // Adds, converting to the type of the left-hand side (Degrees)
-let difference = radians - degrees // Subtracts, converting to the type of the left-hand side (Radians)
-let product = degrees * 2.0 // Multiplies (not normalized)
-let quotient = radians / 2.0 // Divides (not normalized)
-var mutableDegrees = Degrees(180)
-mutableDegrees += radians
-mutableDegrees -= Int(90)
-mutableDegrees -= Float(45)
 ```
 
 ## Normalization
@@ -189,7 +182,6 @@ let normalizedAngle = myAngle.normalized(by: Double.pi) // normalizedAngle is π
 **Cross-Type Comparisons:** Comparison operators handle different `Anglable` types correctly by performing internal conversions.
 
 **Tolerance:** The comparison operations are performed using a tolerance to prevent errors due to floating-point precision limitations.
-
 
 ## Trigonometry
 
