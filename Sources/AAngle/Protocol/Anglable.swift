@@ -39,7 +39,7 @@ extension Anglable {
     /// - Parameter value: The value to normalize the angle by.
     public mutating func normalize(by value: Double) {
         guard rawValue.isFinite else { return }
-        self.rawValue = rawValue.remainder(dividingBy: value)
+        self.rawValue = fmod(rawValue, value)
         if rawValue < 0.0 { rawValue += value }
     }
     
