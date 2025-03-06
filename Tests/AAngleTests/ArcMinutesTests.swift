@@ -35,9 +35,9 @@ let arrArcMin: [ArcMinutes] = [
 }
 
 @Test func testNormalizeArcMinutes() throws {
-    #expect(ArcMinutes(270.000).normalized() == ArcMinutes(5400.0))
-    #expect(ArcMinutes(432.000).normalized() == ArcMinutes(0.0))
-    #expect(ArcMinutes(24000.0).normalized() == ArcMinutes(218.4))
+    #expect(ArcMinutes(5400_000).normalized() == ArcMinutes(0))
+    #expect(ArcMinutes(432_000).normalized() == ArcMinutes(0))
+    #expect(ArcMinutes(24000_0).normalized() == ArcMinutes(2400))
 }
 
 @Test func testArcMinutesOperator() throws {

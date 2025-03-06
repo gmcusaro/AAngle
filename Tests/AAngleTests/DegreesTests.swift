@@ -62,6 +62,7 @@ let arrDeg: [Degrees] = [
     #expect(deg >= Gradians(200.0))
     #expect(deg >= Degrees(180.0))
     #expect(deg == Degrees(180.0))
+    #expect(deg == 180.0)
     #expect(deg == Radians(3.1415926535898))
     #expect(Degrees(510).normalized().rawValue == 150)
     #expect(Degrees(45.0).opposite == Degrees(135.0))
