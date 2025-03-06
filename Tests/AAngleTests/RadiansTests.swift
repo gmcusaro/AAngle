@@ -36,7 +36,10 @@ let arrRad: [Radians] = [
 }
 
 @Test func testNormalizeRadians() throws {
-    
+    #expect(Radians(3 * .pi).normalized() == Radians(.pi))
+    #expect(Radians(4 * .pi).normalized() == Radians(0.0))
+    #expect(Radians(-.pi).normalized() == Radians(.pi))
+    #expect(Radians(1.5 * .pi).normalized() == Radians(1.5 * .pi))
 }
 
 @Test func testRadiansOperator() throws {
