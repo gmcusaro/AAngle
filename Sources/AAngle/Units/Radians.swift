@@ -8,8 +8,6 @@ public struct Radians: Hashable, Codable, Sendable, Anglable {
     /// - Parameter rawValue: The angle in radian as a `Double`.
     @inlinable
     public init(_ rawValue: Double) {
-        // Ensure the rawValue is finite (not NaN or infinite)
-        precondition(rawValue.isFinite, "Radians must be initialized with a finite value.")
         self.rawValue = rawValue
     }
     

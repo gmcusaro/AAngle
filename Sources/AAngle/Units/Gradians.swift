@@ -8,8 +8,6 @@ public struct Gradians: Hashable, Codable, Sendable, Anglable {
     /// - Parameter rawValue: The angle in gradian as a `Double`.
     @inlinable
     public init(_ rawValue: Double) {
-        // Ensure the rawValue is finite (not NaN or infinite)
-        precondition(rawValue.isFinite, "Gradians must be initialized with a finite value.")
         self.rawValue = rawValue
     }
     
