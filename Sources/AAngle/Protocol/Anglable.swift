@@ -28,13 +28,13 @@ public protocol Anglable: Codable, Hashable, Equatable, ExpressibleByFloatLitera
     func toMeasurement() -> Measurement<UnitAngle>
     
     /// Initializes an `Anglable` instance from another `Anglable` type.
-    /// 
+    ///
     /// - Parameter angle: The angle to convert.
     init<T: Anglable>(_ angle: T)
 }
 
 extension Anglable {
-    /// Normalizes the angle by a specified value.
+    /// Normalizes the angle by a specified value. Handles `Double.nan` by returning without modifying the value.
     ///
     /// - Parameter value: The value to normalize the angle by.
     public mutating func normalize(by value: Double) {
@@ -72,14 +72,24 @@ public extension Anglable {
     
     /// String representation of the angle.
     var description: String {
+        if rawValue.isNaN {
+            return "NaN"
+        } else if rawValue.isInfinite {
+            return rawValue > 0 ? "+Inf" : "-Inf"
+        }
         return "\(rawValue)"
     }
     
-    /// String to debug of the angle.
+    /// String to debug of the angle. Handles `Double.nan` and infinity.
     var debugDescription: String {
-        "Angle(\(type(of: self))): rawValue = \(rawValue), normalized = \(self.normalized().rawValue)"
+        if rawValue.isNaN {
+            return "Angle(\(type(of: self))): rawValue = NaN"
+        } else if rawValue.isInfinite {
+            return "Angle(\(type(of: self))): rawValue = \(rawValue > 0 ? "+Inf" : "-Inf")"
+        }
+        return "Angle(\(type(of: self))): rawValue = \(rawValue), normalized = \(self.normalized().rawValue)"
     }
-
+    
     /// Initializes an `Anglable` instance with a default value of 0.0.
     init() {
         self.init(0.0)
@@ -118,82 +128,89 @@ public extension Anglable {
         self.init(Double(value))
     }
     
-    /// Adds two `Anglable` instances.
+    /// Adds two `Anglable` instances. Handles `Double.nan` and infinity.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle.
     /// - Returns: The sum of the two angles, normalized.
     static func + (lhs: Self, rhs: Self) -> Self {
+        guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return Self(.nan) }
         var result = Self(lhs.rawValue + rhs.rawValue)
         result.normalize()
         return result
     }
     
-    /// Adds an `Anglable` instance and a `Double`.
+    /// Adds an `Anglable` instance and a `Double`. Handles `Double.nan` and infinity.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     /// - Returns: The sum of the angle and the value, normalized.
     static func + (lhs: Self, rhs: Double) -> Self {
+        guard lhs.rawValue.isFinite && rhs.isFinite else { return Self(.nan) }
         var result = Self(lhs.rawValue + rhs)
         result.normalize()
         return result
     }
     
-    /// Adds an `Anglable` instance and an `Int`.
+    /// Adds an `Anglable` instance and an `Int`. Handles `Double.nan` and infinity.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     /// - Returns: The sum of the angle and the value, normalized.
     static func + (lhs: Self, rhs: Int) -> Self {
+        guard lhs.rawValue.isFinite else { return Self(.nan) }
         var result = Self(lhs.rawValue + Double(rhs))
         result.normalize()
         return result
     }
     
-    /// Adds an `Anglable` instance and a binary integer.
+    /// Adds an `Anglable` instance and a binary integer. Handles `Double.nan` and infinity.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     /// - Returns: The sum of the angle and the value, normalized.
     static func + <T: BinaryInteger>(lhs: Self, rhs: T) -> Self {
+        guard lhs.rawValue.isFinite else { return Self(.nan) }
         var result = Self(lhs.rawValue + Double(rhs))
         result.normalize()
         return result
     }
     
-    /// Adds an `Anglable` instance and a binary floating-point value.
+    /// Adds an `Anglable` instance and a binary floating-point value. Handles `Double.nan` and infinity.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     /// - Returns: The sum of the angle and the value, normalized.
     static func + <T: BinaryFloatingPoint>(lhs: Self, rhs: T) -> Self {
+        guard lhs.rawValue.isFinite && rhs.isFinite else { return Self(.nan) }
         var result = Self(lhs.rawValue + Double(rhs))
         result.normalize()
         return result
     }
     
-    /// Adds an `Anglable` instance to another `Anglable` instance in place.
+    /// Adds an `Anglable` instance to another `Anglable` instance in place. Handles `Double.nan` by doing nothing.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle.
     static func += (lhs: inout Self, rhs: Self) {
+        guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return }
         lhs.rawValue += rhs.rawValue
         lhs.normalize()
     }
     
-    /// Adds a `Double` to an `Anglable` instance in place.
+    /// Adds a `Double` to an `Anglable` instance in place. Handles `Double.nan` by doing nothing.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     static func += (lhs: inout Self, rhs: Double) {
+        guard lhs.rawValue.isFinite && rhs.isFinite else { return }
         lhs.rawValue += rhs
         lhs.normalize()
     }
@@ -204,6 +221,7 @@ public extension Anglable {
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     static func += (lhs: inout Self, rhs: Int) {
+        guard lhs.rawValue.isFinite else { return }
         lhs.rawValue += Double(rhs)
         lhs.normalize()
     }
@@ -213,95 +231,104 @@ public extension Anglable {
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     static func += <T: BinaryInteger>(lhs: inout Self, rhs: T){
+        guard lhs.rawValue.isFinite else { return }
         lhs.rawValue += Double(rhs)
         lhs.normalize()
     }
     
-    /// Adds a binary floating-point value to an `Anglable` instance in place.
+    /// Adds a binary floating-point value to an `Anglable` instance in place. Handles `Double.nan` by doing nothing.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     static func += <T: BinaryFloatingPoint>(lhs: inout Self, rhs: T) {
+        guard lhs.rawValue.isFinite && rhs.isFinite else { return }
         lhs.rawValue += Double(rhs)
         lhs.normalize()
     }
     
-    /// Subtracts two `Anglable` instances.
+    /// Subtracts two `Anglable` instances. Handles `Double.nan`.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle.
     /// - Returns: The difference between the two angles, normalized.
     static func - (lhs: Self, rhs: Self) -> Self {
+        guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return Self(.nan) }
         var result = Self(lhs.rawValue - rhs.rawValue)
         result.normalize()
         return result
     }
     
-    /// Subtracts a `Double` from an `Anglable` instance.
+    /// Subtracts a `Double` from an `Anglable` instance. Handles `Double.nan`.
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     /// - Returns: The difference between the angle and the value, normalized.
     static func - (lhs: Self, rhs: Double) -> Self {
+        guard lhs.rawValue.isFinite && rhs.isFinite else { return Self(.nan) }
         var result = Self(lhs.rawValue - rhs)
         result.normalize()
         return result
     }
     
-    /// Subtracts an `Int` from an `Anglable` instance.
+    /// Subtracts an `Int` from an `Anglable` instance. Handles `Double.nan`.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     /// - Returns: The difference between the angle and the value, normalized.
     static func - (lhs: Self, rhs: Int) -> Self {
+        guard lhs.rawValue.isFinite else { return Self(.nan) }
         var result = Self(lhs.rawValue - Double(rhs))
         result.normalize()
         return result
     }
     
-    /// Subtracts a binary integer from an `Anglable` instance.
+    /// Subtracts a binary integer from an `Anglable` instance. Handles `Double.nan`.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     /// - Returns: The difference between the angle and the value, normalized.
     static func - <T: BinaryInteger>(lhs: Self, rhs: T) -> Self {
+        guard lhs.rawValue.isFinite else { return Self(.nan) }
         var result = Self(lhs.rawValue - Double(rhs))
         result.normalize()
         return result
     }
     
-    /// Subtracts a binary floating-point value from an `Anglable` instance.
+    /// Subtracts a binary floating-point value from an `Anglable` instance. Handles `Double.nan`.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     /// - Returns: The difference between the angle and the value, normalized.
     static func - <T: BinaryFloatingPoint>(lhs: Self, rhs: T) -> Self {
+        guard lhs.rawValue.isFinite && rhs.isFinite else { return Self(.nan) }
         var result = Self(lhs.rawValue - Double(rhs))
         result.normalize()
         return result
     }
     
-    /// Subtracts an `Anglable` instance from another `Anglable` instance in place.
+    /// Subtracts an `Anglable` instance from another `Anglable` instance in place. Handles `Double.nan` by doing nothing.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle.
     static func -= (lhs: inout Self, rhs: Self) {
+        guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return }
         lhs.rawValue -= rhs.rawValue
         lhs.normalize()
     }
     
-    /// Subtracts a `Double` from an `Anglable` instance in place.
+    /// Subtracts a `Double` from an `Anglable` instance in place. Handles `Double.nan` by doing nothing.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     static func -= (lhs: inout Self, rhs: Double) {
+        guard lhs.rawValue.isFinite && rhs.isFinite else { return }
         lhs.rawValue -= rhs
         lhs.normalize()
     }
@@ -312,6 +339,7 @@ public extension Anglable {
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     static func -= (lhs: inout Self, rhs: Int) {
+        guard lhs.rawValue.isFinite else { return }
         lhs.rawValue -= Double(rhs)
         lhs.normalize()
     }
@@ -322,75 +350,98 @@ public extension Anglable {
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     static func -= <T: BinaryInteger>(lhs: inout Self, rhs: T){
+        guard lhs.rawValue.isFinite else { return }
         lhs.rawValue -= Double(rhs)
         lhs.normalize()
     }
     
-    /// Subtracts a binary floating-point value from an `Anglable` instance in place.
+    /// Subtracts a binary floating-point value from an `Anglable` instance in place. Handles `Double.nan` by doing nothing.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     static func -= <T: BinaryFloatingPoint>(lhs: inout Self, rhs: T) {
+        guard lhs.rawValue.isFinite && rhs.isFinite else { return }
         lhs.rawValue -= lhs.rawValue + Double(rhs)
         lhs.normalize()
     }
     
-    /// Multiplies two `Anglable` instances.
+    /// Multiplies two `Anglable` instances. Handles `Double.nan`.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle.
     /// - Returns: The product of the two angles.
-    static func * (lhs: Self, rhs: Self) -> Self { Self(lhs.rawValue * rhs.rawValue) }
+    static func * (lhs: Self, rhs: Self) -> Self {
+        guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return Self(.nan) }
+        return Self(lhs.rawValue * rhs.rawValue)
+    }
     
-    /// Multiplies an `Anglable` instance by a `Double`.
+    /// Multiplies an `Anglable` instance by a `Double`. Handles `Double.nan`.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     /// - Returns: The product of the angle and the value.
-    static func * (lhs: Self, rhs: Double) -> Self { Self(lhs.rawValue * rhs) }
+    static func * (lhs: Self, rhs: Double) -> Self {
+        guard lhs.rawValue.isFinite && rhs.isFinite else { return Self(.nan) }
+        return Self(lhs.rawValue * rhs)
+    }
     
-    /// Multiplies an `Anglable` instance by an `Int`.
+    /// Multiplies an `Anglable` instance by an `Int`. Handles `Double.nan`.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     /// - Returns: The product of the angle and the value.
-    static func * (lhs: Self, rhs: Int) -> Self { Self(lhs.rawValue * Double(rhs)) }
+    static func * (lhs: Self, rhs: Int) -> Self {
+        guard lhs.rawValue.isFinite else { return Self(.nan) }
+        return Self(lhs.rawValue * Double(rhs))
+    }
     
-    /// Multiplies an `Anglable` instance by a binary integer.
+    /// Multiplies an `Anglable` instance by a binary integer. Handles `Double.nan`.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     /// - Returns: The product of the angle and the value.
-    static func * <T: BinaryInteger>(lhs: Self, rhs: T) -> Self { Self(lhs.rawValue * Double(rhs)) }
+    static func * <T: BinaryInteger>(lhs: Self, rhs: T) -> Self {
+        guard lhs.rawValue.isFinite else { return Self(.nan) }
+        return Self(lhs.rawValue * Double(rhs))
+    }
     
-    /// Multiplies an `Anglable` instance by a binary floating-point value.
+    /// Multiplies an `Anglable` instance by a binary floating-point value. Handles `Double.nan`.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     /// - Returns: The product of the angle and the value.
-    static func * <T: BinaryFloatingPoint>(lhs: Self, rhs: T) -> Self { Self(lhs.rawValue * Double(rhs)) }
+    static func * <T: BinaryFloatingPoint>(lhs: Self, rhs: T) -> Self {
+        guard lhs.rawValue.isFinite && rhs.isFinite else { return Self(.nan) }
+        return Self(lhs.rawValue * Double(rhs))
+    }
     
-    /// Divides two `Anglable` instances.
+    /// Divides two `Anglable` instances. Handles `Double.nan`.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle.
     /// - Returns: The quotient of the two angles.
-    static func / (lhs: Self, rhs: Self) -> Self { Self(lhs.rawValue / rhs.rawValue) }
+    static func / (lhs: Self, rhs: Self) -> Self {
+        guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return Self(.nan) }
+        return Self(lhs.rawValue / rhs.rawValue)
+    }
     
-    /// Divides an `Anglable` instance by a `Double`.
+    /// Divides an `Anglable` instance by a `Double`. Handles `Double.nan`.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     /// - Returns: The quotient of the angle and the value.
-    static func / (lhs: Self, rhs: Double) -> Self { Self(lhs.rawValue / rhs) }
+    static func / (lhs: Self, rhs: Double) -> Self {
+        guard lhs.rawValue.isFinite && rhs.isFinite else { return Self(.nan) }
+        return Self(lhs.rawValue / rhs)
+    }
     
     /// Divides an `Anglable` instance by an `Int`.
     ///
@@ -400,29 +451,40 @@ public extension Anglable {
     /// - Returns: The quotient of the angle and the value.
     static func / (lhs: Self, rhs: Int) -> Self { Self(lhs.rawValue / Double(rhs)) }
     
-    /// Divides an `Anglable` instance by a binary integer.
+    /// Divides an `Anglable` instance by a binary integer. Handles `Double.nan`.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     /// - Returns: The quotient of the angle and the value.
-    static func / <T: BinaryInteger>(lhs: Self, rhs: T) -> Self { Self(lhs.rawValue / Double(rhs)) }
+    static func / <T: BinaryInteger>(lhs: Self, rhs: T) -> Self {
+        guard lhs.rawValue.isFinite else { return Self(.nan) }
+        return Self(lhs.rawValue / Double(rhs))
+    }
     
-    /// Divides an `Anglable` instance by a binary floating-point value.
+    /// Divides an `Anglable` instance by a binary floating-point value. Handles `Double.nan`.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     /// - Returns: The quotient of the angle and the value.
-    static func / <T: BinaryFloatingPoint>(lhs: Self, rhs: T) -> Self { Self(lhs.rawValue / Double(rhs)) }
+    static func / <T: BinaryFloatingPoint>(lhs: Self, rhs: T) -> Self {
+        guard lhs.rawValue.isFinite && rhs.isFinite else { return Self(.nan) }
+        return Self(lhs.rawValue / Double(rhs))
+    }
     
-    /// Compares two `Anglable` instances for equality.
+    /// Compares two `Anglable` instances for equality. Handles `Double.nan`. Handles `Double.nan` correctly.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle.
     /// - Returns: `true` if the angles are equal within the tolerance, otherwise `false`.
-    static func == (lhs: Self, rhs: Self) -> Bool { abs(lhs.rawValue - rhs.rawValue) <= Self.tolerance }
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        if lhs.rawValue.isNaN || rhs.rawValue.isNaN {
+            return false // NaN is never equal to anything, including itself.
+        }
+        return abs(lhs.rawValue - rhs.rawValue) <= Self.tolerance
+    }
     
     /// Compares two `Anglable` instances to determine if the left-hand side is less than the right-hand side.
     ///
@@ -456,11 +518,14 @@ public extension Anglable {
     /// - Returns: `true` if the left-hand side is greater than or equal to the right-hand side, otherwise `false`.
     static func >= (lhs: Self, rhs: Self) -> Bool { lhs.rawValue >= rhs.rawValue }
     
-    /// Negates an `Anglable` instance.
+    /// Negates an `Anglable` instance. Handles `Double.nan`.
     ///
     /// - Parameter operand: The angle to negate.
     /// - Returns: A new `Anglable` instance with the negated value.
-    prefix static func - (operand: Self) -> Self { Self(-operand.rawValue) }
+    prefix static func - (operand: Self) -> Self {
+        guard operand.rawValue.isFinite else { return Self(.nan) }
+        return Self(-operand.rawValue)
+    }
 }
 
 public extension Anglable {
@@ -495,83 +560,92 @@ public extension Anglable {
         return T(valueInTargetUnits)
     }
     
-    /// Performs arithmetic addition on two `Anglable` instances.
+    /// Performs arithmetic addition on two `Anglable` instances. Handles `Double.nan` and infinity.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle.
     /// - Returns: A new `Anglable` instance representing the sum.
     static func + <T: Anglable>(lhs: Self, rhs: T) -> Self {
+        guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return Self(.nan) }
         let rhsConverted = rhs._convert(to: Self.self)
         var result = Self(lhs.rawValue + rhsConverted.rawValue)
         result.normalize()
         return result
     }
     
-    /// Adds another `Anglable` value to this instance in place.
+    /// Adds another `Anglable` value to this instance in place. Handles `Double.nan` by doing nothing.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle to modify.
     ///   - rhs: The right-hand side angle to add.
     static func += <T: Anglable>(lhs: inout Self, rhs: T) {
+        guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return }
         let rhsConverted = rhs._convert(to: Self.self)
         lhs.rawValue += rhsConverted.rawValue
         lhs.normalize()
     }
     
-    /// Performs arithmetic subtraction on two `Anglable` instances.
+    /// Performs arithmetic subtraction on two `Anglable` instances. Handles `Double.nan`.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle.
     /// - Returns: A new `Anglable` instance representing the difference.
     static func - <T: Anglable>(lhs: Self, rhs: T) -> Self {
+        guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return Self(.nan) }
         let rhsConverted = rhs._convert(to: Self.self)
         var result = Self(lhs.rawValue - rhsConverted.rawValue)
         result.normalize()
         return result
     }
-
-    /// Subtracts another `Anglable` value from this instance in place.
+    
+    /// Subtracts another `Anglable` value from this instance in place. Handles `Double.nan` by doing nothing.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle to modify.
     ///   - rhs: The right-hand side angle to subtract.
     static func -= <T: Anglable>(lhs: inout Self, rhs: T) {
+        guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return }
         let rhsConverted = rhs._convert(to: Self.self)
         lhs.rawValue -= rhsConverted.rawValue
         lhs.normalize()
     }
     
-    /// Multiplies two `Anglable` values.
+    /// Multiplies two `Anglable` values. Handles `Double.nan`.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle to multiply.
     /// - Returns: A new `Anglable` instance representing the product.
     static func * <T: Anglable>(lhs: Self, rhs: T) -> Self {
+        guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return Self(.nan) }
         let rhsConverted = rhs._convert(to: Self.self)
         return Self(lhs.rawValue * rhsConverted.rawValue)
     }
     
-    /// Divides an `Anglable` value by another `Anglable` value.
+    /// Divides an `Anglable` value by another `Anglable` value. Handles `Double.nan`.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle to divide by.
     /// - Returns: A new `Anglable` instance representing the quotient.
     static func / <T: Anglable>(lhs: Self, rhs: T) -> Self {
+        guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return Self(.nan) }
         let rhsConverted = rhs._convert(to: Self.self)
         return Self(lhs.rawValue / rhsConverted.rawValue)
     }
     
-    /// Compares two `Anglable` values for equality within a tolerance.
+    /// Compares two `Anglable` values for equality within a tolerance. Handles `Double.nan`.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle to compare.
     /// - Returns: `true` if the angles are equal within the defined tolerance, otherwise `false`.
     static func == <T: Anglable>(lhs: Self, rhs: T) -> Bool {
+        if lhs.rawValue.isNaN || rhs.rawValue.isNaN {
+            return false
+        }
         let rhsConverted = rhs._convert(to: Self.self)
         return abs(lhs.rawValue - rhsConverted.rawValue) <= Self.tolerance
     }
@@ -599,7 +673,7 @@ public extension Anglable {
     }
     
     /// Determines whether the left-hand side `Anglable` value is greater than the right-hand side.
-    /// 
+    ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle to compare.
@@ -610,7 +684,7 @@ public extension Anglable {
     }
     
     /// Determines whether the left-hand side `Anglable` value is greater than or equal to the right-hand side within a tolerance.
-    /// 
+    ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle to compare.
