@@ -62,7 +62,7 @@ extension Anglable {
     ///
     /// - Parameter value: The value to normalize the angle by.
     public mutating func normalize(by value: Double) {
-        guard rawValue.isFinite else { return }
+        guard rawValue.isFinite, value.isFinite, value != 0 else { return }
         self.rawValue = fmod(rawValue, value)
         if rawValue < 0.0 { rawValue += value }
     }
@@ -96,22 +96,20 @@ public extension Anglable {
     
     /// String representation of the angle.
     var description: String {
-        if rawValue.isNaN {
-            return "NaN"
-        } else if rawValue.isInfinite {
-            return rawValue > 0 ? "+Inf" : "-Inf"
+        switch rawValue {
+        case .nan: return "NaN"
+        case .infinity: return rawValue.sign == .minus ? "-Inf" : "+Inf"
+        default: return "\(rawValue)"
         }
-        return "\(rawValue)"
     }
     
     /// String to debug of the angle. Handles `Double.nan` and infinity.
     var debugDescription: String {
-        if rawValue.isNaN {
-            return "Angle(\(type(of: self))): rawValue = NaN"
-        } else if rawValue.isInfinite {
-            return "Angle(\(type(of: self))): rawValue = \(rawValue > 0 ? "+Inf" : "-Inf")"
+        switch rawValue {
+        case .nan: return "Angle(\(type(of: self))): rawValue = NaN"
+        case .infinity: return "Angle(\(type(of: self))): rawValue = \(rawValue.sign == .minus ? "-Inf" : "+Inf")"
+        default: return "Angle(\(type(of: self))): rawValue = \(rawValue), normalized = \(self.normalized().rawValue)"
         }
-        return "Angle(\(type(of: self))): rawValue = \(rawValue), normalized = \(self.normalized().rawValue)"
     }
     
     /// Initializes an `Anglable` instance with a default value of 0.0.
@@ -159,7 +157,7 @@ public extension Anglable {
     ///   - rhs: The right-hand side angle.
     /// - Returns: The sum of the two angles, normalized.
     static func + (lhs: Self, rhs: Self) -> Self {
-        guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return Self(.nan) }
+        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
         var result = Self(lhs.rawValue + rhs.rawValue)
         result.normalize()
         return result
@@ -397,7 +395,7 @@ public extension Anglable {
     ///   - rhs: The right-hand side angle.
     /// - Returns: The product of the two angles.
     static func * (lhs: Self, rhs: Self) -> Self {
-        guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return Self(.nan) }
+        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
         return Self(lhs.rawValue * rhs.rawValue)
     }
     
@@ -408,7 +406,7 @@ public extension Anglable {
     ///   - rhs: The right-hand side value.
     /// - Returns: The product of the angle and the value.
     static func * (lhs: Self, rhs: Double) -> Self {
-        guard lhs.rawValue.isFinite && rhs.isFinite else { return Self(.nan) }
+        guard lhs.rawValue.isFinite, rhs.isFinite else { return Self(.nan) }
         return Self(lhs.rawValue * rhs)
     }
     
@@ -441,7 +439,7 @@ public extension Anglable {
     ///   - rhs: The right-hand side value.
     /// - Returns: The product of the angle and the value.
     static func * <T: BinaryFloatingPoint>(lhs: Self, rhs: T) -> Self {
-        guard lhs.rawValue.isFinite && rhs.isFinite else { return Self(.nan) }
+        guard lhs.rawValue.isFinite, rhs.isFinite else { return Self(.nan) }
         return Self(lhs.rawValue * Double(rhs))
     }
     
@@ -452,7 +450,7 @@ public extension Anglable {
     ///   - rhs: The right-hand side angle.
     /// - Returns: The quotient of the two angles.
     static func / (lhs: Self, rhs: Self) -> Self {
-        guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return Self(.nan) }
+        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
         return Self(lhs.rawValue / rhs.rawValue)
     }
     
@@ -463,7 +461,7 @@ public extension Anglable {
     ///   - rhs: The right-hand side value.
     /// - Returns: The quotient of the angle and the value.
     static func / (lhs: Self, rhs: Double) -> Self {
-        guard lhs.rawValue.isFinite && rhs.isFinite else { return Self(.nan) }
+        guard lhs.rawValue.isFinite, rhs.isFinite else { return Self(.nan) }
         return Self(lhs.rawValue / rhs)
     }
     
@@ -560,7 +558,7 @@ public extension Anglable {
         self.init(angle._convert(to: Self.self).rawValue)
     }
     
-    /// Converts the current angle to the specified `AngleType`.
+    /// Converts the current angle to the specified `AngleType`. Handles `Double.nan`.
     ///
     /// - Parameter type: The target `AngleType` to convert to.
     /// - Returns: An instance conforming to `Anglable` representing the converted angle.
@@ -580,6 +578,10 @@ public extension Anglable {
             return self as! T
         }
         
+        guard self.rawValue.isFinite else {
+             return T(.nan)
+        }
+        
         let valueInTargetUnits = self.rawValue * (T.normalizationValue / Self.normalizationValue)
         return T(valueInTargetUnits)
     }
@@ -591,7 +593,7 @@ public extension Anglable {
     ///   - rhs: The right-hand side angle.
     /// - Returns: A new `Anglable` instance representing the sum.
     static func + <T: Anglable>(lhs: Self, rhs: T) -> Self {
-        guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return Self(.nan) }
+        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
         let rhsConverted = rhs._convert(to: Self.self)
         var result = Self(lhs.rawValue + rhsConverted.rawValue)
         result.normalize()
@@ -604,7 +606,7 @@ public extension Anglable {
     ///   - lhs: The left-hand side angle to modify.
     ///   - rhs: The right-hand side angle to add.
     static func += <T: Anglable>(lhs: inout Self, rhs: T) {
-        guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return }
+        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return }
         let rhsConverted = rhs._convert(to: Self.self)
         lhs.rawValue += rhsConverted.rawValue
         lhs.normalize()
@@ -617,7 +619,7 @@ public extension Anglable {
     ///   - rhs: The right-hand side angle.
     /// - Returns: A new `Anglable` instance representing the difference.
     static func - <T: Anglable>(lhs: Self, rhs: T) -> Self {
-        guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return Self(.nan) }
+        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
         let rhsConverted = rhs._convert(to: Self.self)
         var result = Self(lhs.rawValue - rhsConverted.rawValue)
         result.normalize()
@@ -630,7 +632,7 @@ public extension Anglable {
     ///   - lhs: The left-hand side angle to modify.
     ///   - rhs: The right-hand side angle to subtract.
     static func -= <T: Anglable>(lhs: inout Self, rhs: T) {
-        guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return }
+        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return }
         let rhsConverted = rhs._convert(to: Self.self)
         lhs.rawValue -= rhsConverted.rawValue
         lhs.normalize()
@@ -643,7 +645,7 @@ public extension Anglable {
     ///   - rhs: The right-hand side angle to multiply.
     /// - Returns: A new `Anglable` instance representing the product.
     static func * <T: Anglable>(lhs: Self, rhs: T) -> Self {
-        guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return Self(.nan) }
+        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
         let rhsConverted = rhs._convert(to: Self.self)
         return Self(lhs.rawValue * rhsConverted.rawValue)
     }
@@ -655,7 +657,7 @@ public extension Anglable {
     ///   - rhs: The right-hand side angle to divide by.
     /// - Returns: A new `Anglable` instance representing the quotient.
     static func / <T: Anglable>(lhs: Self, rhs: T) -> Self {
-        guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return Self(.nan) }
+        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
         let rhsConverted = rhs._convert(to: Self.self)
         return Self(lhs.rawValue / rhsConverted.rawValue)
     }
@@ -685,13 +687,16 @@ public extension Anglable {
         return lhs.rawValue < rhsConverted.rawValue
     }
     
-    /// Determines whether the left-hand side `Anglable` value is less than or equal to the right-hand side within a tolerance.
+    /// Determines whether the left-hand side `Anglable` value is less than or equal to the right-hand side within a tolerance. Handles `Double.nan`.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle to compare.
     /// - Returns: `true` if `lhs` is less than or equal to `rhs` within the defined tolerance, otherwise `false`.
     static func <= <T: Anglable>(lhs: Self, rhs: T) -> Bool {
+        if lhs.rawValue.isNaN || rhs.rawValue.isNaN {
+            return false
+        }
         let rhsConverted = rhs._convert(to: Self.self)
         return lhs.rawValue <= rhsConverted.rawValue + Self.tolerance
     }
@@ -707,13 +712,16 @@ public extension Anglable {
         return lhs.rawValue > rhsConverted.rawValue
     }
     
-    /// Determines whether the left-hand side `Anglable` value is greater than or equal to the right-hand side within a tolerance.
+    /// Determines whether the left-hand side `Anglable` value is greater than or equal to the right-hand side within a tolerance. Handles `Double.nan`.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle to compare.
     /// - Returns: `true` if `lhs` is greater than or equal to `rhs` within the defined tolerance, otherwise `false`.
     static func >= <T: Anglable>(lhs: Self, rhs: T) -> Bool {
+        if lhs.rawValue.isNaN || rhs.rawValue.isNaN {
+           return false
+        }
         let rhsConverted = rhs._convert(to: Self.self)
         return lhs.rawValue >= rhsConverted.rawValue - Self.tolerance
     }
