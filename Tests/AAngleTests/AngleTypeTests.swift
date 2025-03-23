@@ -6,9 +6,9 @@ import Testing
     let value: Revolutions = radiansType.convertTo(.revolutions) as! Revolutions
     print(value.rawValue)
     
-    let angleInRadians = Radians(.pi / 4)  // 45° in radians
+    let angleInRadians = Radians(.pi / 4)
     let oppositeAngleInRadians = angleInRadians
-    print(Degrees(oppositeAngleInRadians))  // Should print 3π/4, i.e., 135° in radians
+    print(Degrees(oppositeAngleInRadians))
     
     var myRev = Revolutions()
     myRev += 0.5
