@@ -96,20 +96,23 @@ public extension Anglable {
     
     /// String representation of the angle.
     var description: String {
-        switch rawValue {
-        case .nan: return "NaN"
-        case .infinity: return rawValue.sign == .minus ? "-Inf" : "+Inf"
-        default: return "\(rawValue)"
+        if rawValue.isNaN {
+            return "NaN"
+        } else if rawValue.isInfinite {
+            return rawValue < 0 ? "-Inf" : "+Inf" //Or rawValue.sign == .minus
+        } else {
+            return "\(rawValue)"
         }
     }
     
     /// String to debug of the angle. Handles `Double.nan` and infinity.
     var debugDescription: String {
-        switch rawValue {
-        case .nan: return "Angle(\(type(of: self))): rawValue = NaN"
-        case .infinity: return "Angle(\(type(of: self))): rawValue = \(rawValue.sign == .minus ? "-Inf" : "+Inf")"
-        default: return "Angle(\(type(of: self))): rawValue = \(rawValue), normalized = \(self.normalized().rawValue)"
+        if rawValue.isNaN {
+            return "Angle(\(type(of: self))): rawValue = NaN"
+        } else if rawValue.isInfinite {
+            return "Angle(\(type(of: self))): rawValue = \(rawValue < 0 ? "-Inf" : "+Inf")"
         }
+        return "Angle(\(type(of: self))): rawValue = \(rawValue), normalized = \(self.normalized().rawValue)"
     }
     
     /// Initializes an `Anglable` instance with a default value of 0.0.
