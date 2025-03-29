@@ -74,6 +74,8 @@ struct DegreesTests {
         #expect(Degrees(180.0).adjacentAngles() == [Degrees(270.0),Degrees(90.0)])
         #expect(Degrees(360.0).adjacentAngles() == [Degrees(90.0),Degrees(270.0)])
         #expect(Degrees(270.0).adjacentAngles() == [Degrees(0.0),Degrees(180.0)])
+        #expect(Degrees(ArcSeconds(-1439999.9999999999999)) == Degrees(-400.0))
+        #expect(Degrees(ArcSeconds(-1439999.9999999999999).normalized()) == Degrees(320.0))
     }
     
     @Test func testDegreesNaN() {
