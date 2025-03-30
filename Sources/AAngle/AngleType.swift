@@ -30,6 +30,7 @@ public enum AngleType: String, Codable, Equatable, Hashable {
 
 public extension AngleType {
     /// Human-readable description of the angle type.
+    @inlinable
     var description: String {
         switch self {
         case .gradians:    return "gradians"
@@ -44,7 +45,8 @@ public extension AngleType {
 
 public extension AngleType {    
     /// Resolves the corresponding angle type initializer.
-    private var angleInitializer: (Double) -> any Anglable {
+    @usableFromInline
+    internal var angleInitializer: (Double) -> any Anglable {
         switch self {
         case .degrees:     return Degrees.init
         case .radians:     return Radians.init
@@ -59,14 +61,16 @@ public extension AngleType {
     ///
     /// - Parameter value: The value of the angle in the specified `AngleType` unit.
     /// - Returns: An `Anglable` instance representing the angle.
+    @inlinable
     func initAngle(_ value: Double) -> any Anglable {
-        angleInitializer(value)
+        return angleInitializer(value)
     }
 
     /// Initializes an angle instance using a floating-point value.
     ///
     /// - Parameter value: The value of the angle in the specified `AngleType` unit.
     /// - Returns: An `Anglable` instance representing the angle.
+    @inlinable
     func initAngle<T: BinaryFloatingPoint>(_ value: T) -> any Anglable {
         initAngle(Double(value))
     }
@@ -75,6 +79,7 @@ public extension AngleType {
     ///
     /// - Parameter value: The value of the angle in the specified `AngleType` unit.
     /// - Returns: An `Anglable` instance representing the angle.
+    @inlinable
     func initAngle<T: BinaryInteger>(_ value: T) -> any Anglable {
         initAngle(Double(value))
     }
@@ -83,6 +88,7 @@ public extension AngleType {
     ///
     /// - Parameter value: An existing `Anglable` instance to be converted.
     /// - Returns: A new `Anglable` instance in the specified `AngleType` unit.
+    @inlinable
     func initAngle(_ value: any Anglable) -> any Anglable {
         angleInitializer(value.rawValue)
     }
