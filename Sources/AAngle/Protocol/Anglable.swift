@@ -28,6 +28,7 @@ import Foundation
 
 /// A protocol that defines a type that can represent an angle.
 public protocol Anglable: Codable, Hashable, Equatable, ExpressibleByFloatLiteral, ExpressibleByIntegerLiteral, CustomStringConvertible, CustomDebugStringConvertible, Sendable {
+    /// The raw value of the angle.
     var rawValue: Double { get set }
     
     /// Initializes an `Anglable` instance with a raw value.
@@ -61,6 +62,7 @@ extension Anglable {
     /// Normalizes the angle by a specified value. Handles `Double.nan` by returning without modifying the value.
     ///
     /// - Parameter value: The value to normalize the angle by.
+    @inlinable
     public mutating func normalize(by value: Double) {
         guard rawValue.isFinite, value.isFinite, value != 0 else { return }
         self.rawValue = fmod(rawValue, value)
@@ -71,6 +73,7 @@ extension Anglable {
     ///
     /// - Parameter value: The value to normalize the angle by.
     /// - Returns: A normalized version of the angle.
+    @inlinable
     public func normalized(by value: Double) -> Self {
         var angle = self
         angle.normalize(by: value)
@@ -85,6 +88,7 @@ extension Anglable {
     /// Returns a normalized version of the angle using the `normalizationValue`.
     ///
     /// - Returns: A normalized version of the angle.
+    @inlinable
     public func normalized() -> Self {
         return normalized(by: Self.normalizationValue)
     }
@@ -95,6 +99,7 @@ public extension Anglable {
     static var tolerance: Double { 1e-12 }
     
     /// String representation of the angle.
+    @inlinable
     var description: String {
         if rawValue.isNaN {
             return "NaN"
@@ -106,13 +111,16 @@ public extension Anglable {
     }
     
     /// String to debug of the angle. Handles `Double.nan` and infinity.
+    @inlinable
     var debugDescription: String {
-        if rawValue.isNaN {
-            return "Angle(\(type(of: self))): rawValue = NaN"
-        } else if rawValue.isInfinite {
-            return "Angle(\(type(of: self))): rawValue = \(rawValue < 0 ? "-Inf" : "+Inf")"
-        }
-        return "Angle(\(type(of: self))): rawValue = \(rawValue), normalized = \(self.normalized().rawValue)"
+#if DEBUG
+        let prefix = "Angle(\(type(of: self))): "
+        if rawValue.isNaN { return prefix + "rawValue = NaN" }
+        if rawValue.isInfinite { return prefix + "rawValue = \(rawValue < 0 ? "-Inf" : "+Inf")" }
+        return prefix + "rawValue = \(rawValue), normalized = \(normalized().rawValue)"
+#else
+        return String(describing: self)
+#endif
     }
     
     /// Initializes an `Anglable` instance with a default value of 0.0.
