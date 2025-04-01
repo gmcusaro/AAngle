@@ -26,6 +26,7 @@ import Foundation
 
 public struct Revolutions: Hashable, Codable, Sendable, Anglable {
     public var rawValue: Double
+    public var tolerance: Double
     
     /// Initializes a `Revolutions` instance with a raw `Double` value.
     /// 
@@ -33,6 +34,7 @@ public struct Revolutions: Hashable, Codable, Sendable, Anglable {
     @inlinable
     public init(_ rawValue: Double) {
         self.rawValue = rawValue
+        self.tolerance = Self.defaultTolerance
     }
     
     /// The normalization value used for converting and normalizing revolutions.

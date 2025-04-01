@@ -26,6 +26,7 @@ import Foundation
 
 public struct Gradians: Hashable, Codable, Sendable, Anglable {
     public var rawValue: Double
+    public var tolerance: Double
     
     /// Initializes a `Gradians` instance with a raw `Double` value.
     /// 
@@ -33,6 +34,7 @@ public struct Gradians: Hashable, Codable, Sendable, Anglable {
     @inlinable
     public init(_ rawValue: Double) {
         self.rawValue = rawValue
+        self.tolerance = Self.defaultTolerance
     }
     
     /// The normalization value used for converting and normalizing gradians.

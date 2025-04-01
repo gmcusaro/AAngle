@@ -31,6 +31,9 @@ public protocol Anglable: Codable, Hashable, Equatable, ExpressibleByFloatLitera
     /// The raw value of the angle.
     var rawValue: Double { get set }
     
+    /// The tolerance used for equality comparisons for this specific instance.
+    var tolerance: Double { get set }
+    
     /// Initializes an `Anglable` instance with a raw value.
     ///
     /// - Parameter rawValue: The raw value of the angle in degrees.
@@ -38,6 +41,10 @@ public protocol Anglable: Codable, Hashable, Equatable, ExpressibleByFloatLitera
     
     /// The normalization value used to normalize the angle.
     static var normalizationValue: Double { get }
+    
+    /// The *default* tolerance value used if no instance-specific tolerance is set,
+    /// or as a basis for initialization.
+    static var defaultTolerance: Double { get }
     
     /// Normalizes the angle to a value between 0 and the normalization value.
     mutating func normalize()
@@ -96,7 +103,7 @@ extension Anglable {
 
 public extension Anglable {
     ///  The *default* tolerance value
-    static var tolerance: Double { 1e-12 }
+    static var defaultTolerance: Double { 1e-12 }
     
     /// String representation of the angle.
     @inlinable
@@ -516,7 +523,9 @@ public extension Anglable {
         if lhs.rawValue.isNaN || rhs.rawValue.isNaN {
             return false // NaN is never equal to anything, including itself.
         }
-        return abs(lhs.rawValue - rhs.rawValue) <= Self.tolerance
+        // Use the maximum of the two tolerances for comparison
+        let effectiveTolerance = max(lhs.tolerance, rhs.tolerance)
+        return abs(lhs.rawValue - rhs.rawValue) <= effectiveTolerance
     }
     
     /// Compares two `Anglable` instances to determine if the left-hand side is less than the right-hand side.
@@ -683,8 +692,10 @@ public extension Anglable {
         if lhs.rawValue.isNaN || rhs.rawValue.isNaN {
             return false
         }
+        // Use the maximum of the two tolerances for comparison
+        let effectiveTolerance = max(lhs.tolerance, rhs.tolerance)
         let rhsConverted = rhs._convert(to: Self.self)
-        return abs(lhs.rawValue - rhsConverted.rawValue) <= Self.tolerance
+        return abs(lhs.rawValue - rhsConverted.rawValue) <= effectiveTolerance
     }
     
     /// Determines whether the left-hand side `Anglable` value is less than the right-hand side.
@@ -708,8 +719,10 @@ public extension Anglable {
         if lhs.rawValue.isNaN || rhs.rawValue.isNaN {
             return false
         }
+        // Use the maximum of the two tolerances for comparison
+        let effectiveTolerance = max(lhs.tolerance, rhs.tolerance)
         let rhsConverted = rhs._convert(to: Self.self)
-        return lhs.rawValue <= rhsConverted.rawValue + Self.tolerance
+        return lhs.rawValue <= rhsConverted.rawValue + effectiveTolerance
     }
     
     /// Determines whether the left-hand side `Anglable` value is greater than the right-hand side.
@@ -733,7 +746,9 @@ public extension Anglable {
         if lhs.rawValue.isNaN || rhs.rawValue.isNaN {
            return false
         }
+        // Use the maximum of the two tolerances for comparison
+        let effectiveTolerance = max(lhs.tolerance, rhs.tolerance)
         let rhsConverted = rhs._convert(to: Self.self)
-        return lhs.rawValue >= rhsConverted.rawValue - Self.tolerance
+        return lhs.rawValue >= rhsConverted.rawValue - effectiveTolerance
     }
 }
