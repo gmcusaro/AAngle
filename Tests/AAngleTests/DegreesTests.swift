@@ -116,5 +116,11 @@ struct DegreesTests {
         #expect(infDegrees.description == "+Inf")
         #expect(negInfDegrees.description == "-Inf")
         #expect(nanDegrees.description == "NaN")
+        
+        var deg1 = Degrees(89.999999999999)
+        let deg2 = Degrees(89.99999)
+        #expect(deg1 != deg2)
+        deg1.tolerance = 1e-5
+        #expect(deg1 == deg2)
     }
 }
