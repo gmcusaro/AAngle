@@ -102,5 +102,16 @@ struct RevolutionsTests {
         #expect(infRevolutions.description == "+Inf")
         #expect(negInfRevolutions.description == "-Inf")
         #expect(nanRevolutions.description == "NaN")
+        
+        var rev1 = Revolutions(0.333333333333)
+        let rev2 = Revolutions(0.333333)
+        print("rev1: ",rev1.tolerance)
+        print("rev2: ",rev2.tolerance)
+        #expect(rev1 != rev2)
+        
+        rev1.tolerance = 1e-6
+        print("rev1: ",rev1.tolerance)
+        print("rev2: ",rev2.tolerance)
+        #expect(rev1 == rev2)
     }
 }
