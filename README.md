@@ -190,6 +190,19 @@ let normalizedAngle = myAngle.normalized(by: Double.pi) // normalizedAngle is π
 
 **Tolerance:** The comparison operations are performed using a tolerance to prevent errors due to floating-point precision limitations.
 
+### Tolerance
+
+In the protocol `Anglable` the default tolerane value is `1-e12`. For each angle type is possible set custom value overriding a default static tolerance.
+
+```swift
+var deg1 = Degrees(89.999999999999) // tolerance starts at Degrees.defaultTolerance (1e-12)
+var deg2 = Degrees(89.99999)        // tolerance starts at Degrees.defaultTolerance (1e-12)
+print(deg1 == deg2)                 // false
+
+deg1.tolerance = 1e-5               // Set custom tolerance for deg1
+print(deg1 == deg2)                 // true 
+```
+
 ## Trigonometry
 
 `AAngle` provides a set of trigonometric functions for **Radians** type.
