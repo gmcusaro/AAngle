@@ -24,7 +24,7 @@
 
 import Foundation
 
-public struct Radians: Hashable, Codable, Sendable, Anglable {
+public struct Radians: Hashable, Codable, Sendable, AAnglable {
     public var rawValue: Double
     public var tolerance: Double
     

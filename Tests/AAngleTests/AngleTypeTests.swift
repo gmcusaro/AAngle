@@ -2,7 +2,7 @@ import Testing
 @testable import AAngle
 
 @Test func testAngleType() throws {
-    let radiansType: Degrees = AngleType.degrees.initAngle(180) as! Degrees
+    let radiansType: Degrees = AAngleType.degrees.initAngle(180) as! Degrees
     let value: Revolutions = radiansType.convertTo(.revolutions) as! Revolutions
     #expect(value.rawValue == 0.5)
     

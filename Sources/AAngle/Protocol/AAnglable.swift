@@ -1,5 +1,5 @@
 //
-// Anglable.swift
+// AAnglable.swift
 // AAngle
 //
 // Created by Giovanni Maria Cusaro on 14/02/2025 Copyright 2025
@@ -27,7 +27,7 @@ import Foundation
 // MARK:- AngleType Protocol
 
 /// A protocol that defines a type that can represent an angle.
-public protocol Anglable: Codable, Hashable, Equatable, ExpressibleByFloatLiteral, ExpressibleByIntegerLiteral, CustomStringConvertible, CustomDebugStringConvertible, Sendable {
+public protocol AAnglable: Codable, Hashable, Equatable, ExpressibleByFloatLiteral, ExpressibleByIntegerLiteral, CustomStringConvertible, CustomDebugStringConvertible, Sendable {
     /// The raw value of the angle.
     var rawValue: Double { get set }
     
@@ -62,10 +62,10 @@ public protocol Anglable: Codable, Hashable, Equatable, ExpressibleByFloatLitera
     /// Initializes an `Anglable` instance from another `Anglable` type.
     ///
     /// - Parameter angle: The angle to convert.
-    init<T: Anglable>(_ angle: T)
+    init<T: AAnglable>(_ angle: T)
 }
 
-extension Anglable {
+extension AAnglable {
     /// Normalizes the angle by a specified value. Handles `Double.nan` by returning without modifying the value.
     ///
     /// - Parameter value: The value to normalize the angle by.
@@ -101,7 +101,7 @@ extension Anglable {
     }
 }
 
-public extension Anglable {
+public extension AAnglable {
     ///  The *default* tolerance value
     static var defaultTolerance: Double { 1e-12 }
     
@@ -570,11 +570,11 @@ public extension Anglable {
     }
 }
 
-public extension Anglable {
+public extension AAnglable {
     /// Converts the current angle to another `Anglable` type.
     ///
     /// - Parameter angle: The angle to convert.
-    init<T: Anglable>(_ angle: T) {
+    init<T: AAnglable>(_ angle: T) {
         self.init(angle._convert(to: Self.self).rawValue)
     }
     
@@ -582,7 +582,7 @@ public extension Anglable {
     ///
     /// - Parameter type: The target `AngleType` to convert to.
     /// - Returns: An instance conforming to `Anglable` representing the converted angle.
-    func convertTo(_ type: AngleType) -> any Anglable {
+    func convertTo(_ type: AAngleType) -> any AAnglable {
         switch type {
         case .degrees:     return Degrees(self._convert(to: Degrees.self))
         case .radians:     return Radians(self._convert(to: Radians.self))
@@ -593,7 +593,7 @@ public extension Anglable {
         }
     }
     
-    private func _convert<T: Anglable>(to: T.Type) -> T {
+    private func _convert<T: AAnglable>(to: T.Type) -> T {
         if Self.self == T.self {
             return self as! T
         }
@@ -612,7 +612,7 @@ public extension Anglable {
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle.
     /// - Returns: A new `Anglable` instance representing the sum.
-    static func + <T: Anglable>(lhs: Self, rhs: T) -> Self {
+    static func + <T: AAnglable>(lhs: Self, rhs: T) -> Self {
         guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
         let rhsConverted = rhs._convert(to: Self.self)
         var result = Self(lhs.rawValue + rhsConverted.rawValue)
@@ -625,7 +625,7 @@ public extension Anglable {
     /// - Parameters:
     ///   - lhs: The left-hand side angle to modify.
     ///   - rhs: The right-hand side angle to add.
-    static func += <T: Anglable>(lhs: inout Self, rhs: T) {
+    static func += <T: AAnglable>(lhs: inout Self, rhs: T) {
         guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return }
         let rhsConverted = rhs._convert(to: Self.self)
         lhs.rawValue += rhsConverted.rawValue
@@ -638,7 +638,7 @@ public extension Anglable {
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle.
     /// - Returns: A new `Anglable` instance representing the difference.
-    static func - <T: Anglable>(lhs: Self, rhs: T) -> Self {
+    static func - <T: AAnglable>(lhs: Self, rhs: T) -> Self {
         guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
         let rhsConverted = rhs._convert(to: Self.self)
         var result = Self(lhs.rawValue - rhsConverted.rawValue)
@@ -651,7 +651,7 @@ public extension Anglable {
     /// - Parameters:
     ///   - lhs: The left-hand side angle to modify.
     ///   - rhs: The right-hand side angle to subtract.
-    static func -= <T: Anglable>(lhs: inout Self, rhs: T) {
+    static func -= <T: AAnglable>(lhs: inout Self, rhs: T) {
         guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return }
         let rhsConverted = rhs._convert(to: Self.self)
         lhs.rawValue -= rhsConverted.rawValue
@@ -664,7 +664,7 @@ public extension Anglable {
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle to multiply.
     /// - Returns: A new `Anglable` instance representing the product.
-    static func * <T: Anglable>(lhs: Self, rhs: T) -> Self {
+    static func * <T: AAnglable>(lhs: Self, rhs: T) -> Self {
         guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
         let rhsConverted = rhs._convert(to: Self.self)
         return Self(lhs.rawValue * rhsConverted.rawValue)
@@ -676,7 +676,7 @@ public extension Anglable {
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle to divide by.
     /// - Returns: A new `Anglable` instance representing the quotient.
-    static func / <T: Anglable>(lhs: Self, rhs: T) -> Self {
+    static func / <T: AAnglable>(lhs: Self, rhs: T) -> Self {
         guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
         let rhsConverted = rhs._convert(to: Self.self)
         return Self(lhs.rawValue / rhsConverted.rawValue)
@@ -688,7 +688,7 @@ public extension Anglable {
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle to compare.
     /// - Returns: `true` if the angles are equal within the defined tolerance, otherwise `false`.
-    static func == <T: Anglable>(lhs: Self, rhs: T) -> Bool {
+    static func == <T: AAnglable>(lhs: Self, rhs: T) -> Bool {
         if lhs.rawValue.isNaN || rhs.rawValue.isNaN {
             return false
         }
@@ -704,7 +704,7 @@ public extension Anglable {
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle to compare.
     /// - Returns: `true` if `lhs` is less than `rhs`, otherwise `false`.
-    static func < <T: Anglable>(lhs: Self, rhs: T) -> Bool {
+    static func < <T: AAnglable>(lhs: Self, rhs: T) -> Bool {
         let rhsConverted = rhs._convert(to: Self.self)
         return lhs.rawValue < rhsConverted.rawValue
     }
@@ -715,7 +715,7 @@ public extension Anglable {
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle to compare.
     /// - Returns: `true` if `lhs` is less than or equal to `rhs` within the defined tolerance, otherwise `false`.
-    static func <= <T: Anglable>(lhs: Self, rhs: T) -> Bool {
+    static func <= <T: AAnglable>(lhs: Self, rhs: T) -> Bool {
         if lhs.rawValue.isNaN || rhs.rawValue.isNaN {
             return false
         }
@@ -731,7 +731,7 @@ public extension Anglable {
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle to compare.
     /// - Returns: `true` if `lhs` is greater than `rhs`, otherwise `false`.
-    static func > <T: Anglable>(lhs: Self, rhs: T) -> Bool {
+    static func > <T: AAnglable>(lhs: Self, rhs: T) -> Bool {
         let rhsConverted = rhs._convert(to: Self.self)
         return lhs.rawValue > rhsConverted.rawValue
     }
@@ -742,7 +742,7 @@ public extension Anglable {
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle to compare.
     /// - Returns: `true` if `lhs` is greater than or equal to `rhs` within the defined tolerance, otherwise `false`.
-    static func >= <T: Anglable>(lhs: Self, rhs: T) -> Bool {
+    static func >= <T: AAnglable>(lhs: Self, rhs: T) -> Bool {
         if lhs.rawValue.isNaN || rhs.rawValue.isNaN {
            return false
         }

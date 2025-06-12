@@ -24,11 +24,11 @@
 
 import Foundation
 
-public enum AngleType: String, Codable, Equatable, Hashable {
+public enum AAngleType: String, Codable, Equatable, Hashable {
     case gradians, degrees, radians, revolutions, arcSeconds, arcMinutes
 }
 
-public extension AngleType {
+public extension AAngleType {
     /// Human-readable description of the angle type.
     @inlinable
     var description: String {
@@ -43,10 +43,10 @@ public extension AngleType {
     }
 }
 
-public extension AngleType {    
+public extension AAngleType {    
     /// Resolves the corresponding angle type initializer.
     @usableFromInline
-    internal var angleInitializer: (Double) -> any Anglable {
+    internal var angleInitializer: (Double) -> any AAnglable {
         switch self {
         case .degrees:     return Degrees.init
         case .radians:     return Radians.init
@@ -62,7 +62,7 @@ public extension AngleType {
     /// - Parameter value: The value of the angle in the specified `AngleType` unit.
     /// - Returns: An `Anglable` instance representing the angle.
     @inlinable
-    func initAngle(_ value: Double) -> any Anglable {
+    func initAngle(_ value: Double) -> any AAnglable {
         return angleInitializer(value)
     }
 
@@ -71,7 +71,7 @@ public extension AngleType {
     /// - Parameter value: The value of the angle in the specified `AngleType` unit.
     /// - Returns: An `Anglable` instance representing the angle.
     @inlinable
-    func initAngle<T: BinaryFloatingPoint>(_ value: T) -> any Anglable {
+    func initAngle<T: BinaryFloatingPoint>(_ value: T) -> any AAnglable {
         initAngle(Double(value))
     }
 
@@ -80,16 +80,34 @@ public extension AngleType {
     /// - Parameter value: The value of the angle in the specified `AngleType` unit.
     /// - Returns: An `Anglable` instance representing the angle.
     @inlinable
-    func initAngle<T: BinaryInteger>(_ value: T) -> any Anglable {
+    func initAngle<T: BinaryInteger>(_ value: T) -> any AAnglable {
         initAngle(Double(value))
     }
 
-    /// Converts an existing `Anglable` instance to the specified `AngleType`.
+    /// Converts an existing `AAnglable` instance to a new instance of the specified `AAngleType`.
     ///
-    /// - Parameter value: An existing `Anglable` instance to be converted.
-    /// - Returns: A new `Anglable` instance in the specified `AngleType` unit.
+    /// This method creates a new angle value of the type represented by `self`,
+    /// converting from the provided `AAnglable` instance using the native
+    /// `init<T: AAnglable>(_:)` protocol initializer. The resulting value will
+    /// be equivalent in measure but represented in the unit corresponding to `self`.
+    ///
+    /// - Parameter value: An existing `AAnglable` instance to convert.
+    /// - Returns: A new `AAnglable` instance in the unit type specified by `self`.
     @inlinable
-    func initAngle(_ value: any Anglable) -> any Anglable {
-        angleInitializer(value.rawValue)
+    func convert(from value: any AAnglable) -> any AAnglable {
+        switch self {
+        case .degrees:
+            return Degrees(value)
+        case .radians:
+            return Radians(value)
+        case .gradians:
+            return Gradians(value)
+        case .revolutions:
+            return Revolutions(value)
+        case .arcMinutes:
+            return ArcMinutes(value)
+        case .arcSeconds:
+            return ArcSeconds(value)
+        }
     }
 }
