@@ -28,7 +28,7 @@
 
 **Measurement Support:** Convert angle values to Swift's `Measurement<UnitAngle>` type for use with the Foundation framework's [units](https://developer.apple.com/documentation/foundation/unitangle).
 
-**Type-Safe Units:** Uses an `AngleType` enum to represent units, ensuring type safety and avoiding string-based errors.
+**Type-Safe Units:** Uses an `AAngleType` enum to represent units, ensuring type safety and avoiding string-based errors.
 
 **Extensible Protocol:** Designed with the `Anglable` protocol to make it easy to add custom angle types.
 
@@ -43,7 +43,7 @@ You can install the `AAngle` package via [Swift Package Manager](https://www.swi
 **Using Xcode:**
 1.  Go to **File** > **Add Packages...**
 2.  Enter the repository URL: `https://github.com/gmcusaro/AAngle.git`.
-3.  Choose "Up to Next Major Version" and specify `1.0.0` (or your initial version) as the starting version.
+3.  Choose "Up to Next Major Version" and specify `1.2.1` (or your initial version) as the starting version.
 4.  Click "Add Package".
 
 **Using [Packages](https://www.swift.org/packages):**
@@ -66,23 +66,28 @@ import AAngle
 // Create angles
 let degrees = Degrees(90)
 let radians = Radians(Double.pi / 2)
-let revolutions = AngleType.revolutions.initAngle(degress)
+let revolutions = AAngleType.revolutions.initAngle(1)
 let grads = Gradians() // Init 0.0 grad
 let arcMinutes = ArcMinutes.zero // Init 0.0 arc minutes
-let arcSeconds = AngleType.arcSeconds.initAngle(324000.00000000) // Init 324000.00000000 arc seconds
+let arcSeconds = AAngleType.arcSeconds.initAngle(324000.00000000) // Init 324000.00000000 arc seconds
 
 // Angle conversions
 let degreesFromRadians = Degrees(radians) // Convert radians to degrees
-let degreesFromRevolutions: Degrees = revolutions.convertTo(.degrees) as? Degrees // Convert to any Anglable type
+let degreesFromRevolutions: Degrees = revolutions.convert(to: .degrees) as! Degrees // Convert to any Anglable type
 
 // Using Measurement
 let measurement = degrees.toMeasurement()
-print(measurement) // Output: 90.0 deg
+print(measurement) // 90.0 °
 
 // Accessing to rawValue, description and debugDescription
 print(degrees.rawValue) // 90.0
 print(degrees.description) // "90.0"
 print(degrees.debugDescription) // "Angle(Degrees): rawValue = 90.0, normalized = 90.0"
+
+// Angle conversions
+let degreesToRadians = Degrees(radians) // Convert radians to degrees
+let degreesConvertGradians: Degrees = grads.convert(to: .degrees) as! Degrees // Convert to any Anglable type
+let degreesFromGradians = AAngleType.degrees.initAngle(grads) // Convert Anglable to any AAngleType
 ```
 
 ## Operators
@@ -200,7 +205,7 @@ var deg2 = Degrees(89.99999)        // tolerance starts at Degrees.defaultTolera
 print(deg1 == deg2)                 // false
 
 deg1.tolerance = 1e-5               // Set custom tolerance for deg1
-print(deg1 == deg2)                 // true 
+print(deg1 == deg2)                 // true
 ```
 
 ## Trigonometry
