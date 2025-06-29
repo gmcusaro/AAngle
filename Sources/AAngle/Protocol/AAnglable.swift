@@ -582,7 +582,7 @@ public extension AAnglable {
     ///
     /// - Parameter type: The target `AngleType` to convert to.
     /// - Returns: An instance conforming to `Anglable` representing the converted angle.
-    func convertTo(_ type: AAngleType) -> any AAnglable {
+    func convert(to type: AAngleType) -> any AAnglable {
         switch type {
         case .degrees:     return Degrees(self._convert(to: Degrees.self))
         case .radians:     return Radians(self._convert(to: Radians.self))

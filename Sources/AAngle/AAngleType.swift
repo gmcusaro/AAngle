@@ -93,8 +93,8 @@ public extension AAngleType {
     ///
     /// - Parameter value: An existing `AAnglable` instance to convert.
     /// - Returns: A new `AAnglable` instance in the unit type specified by `self`.
-    @inlinable
-    func convert(from value: any AAnglable) -> any AAnglable {
+    @inlinable    
+    func initAngle(_ value: any AAnglable) -> any AAnglable {
         switch self {
         case .degrees:
             return Degrees(value)
