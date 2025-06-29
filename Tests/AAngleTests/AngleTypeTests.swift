@@ -5,7 +5,6 @@ import Testing
 @Test func testAAngleType() throws {
     let degrees = Degrees(180)
     #expect(AAngleType.revolutions.initAngle(degrees) as! Revolutions == Revolutions(0.5))
-    
     let radiansType: Degrees = AAngleType.degrees.initAngle(180) as! Degrees
     let value: Revolutions = radiansType.convert(to: .revolutions) as! Revolutions
     #expect(value.rawValue == 0.5)
