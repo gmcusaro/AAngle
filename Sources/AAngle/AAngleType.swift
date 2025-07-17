@@ -24,7 +24,7 @@
 
 import Foundation
 
-public enum AAngleType: String, Codable, Equatable, Hashable {
+public enum AAngleType: String, Codable, Equatable, Hashable, Sendable {
     case gradians, degrees, radians, revolutions, arcSeconds, arcMinutes
 }
 
