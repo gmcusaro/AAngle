@@ -44,6 +44,7 @@ struct RevolutionsTests {
         var rev: Revolutions = .zero
         rev += 0.25
         rev += Revolutions(0.25)
+        #expect(rev - rev == Revolutions(0.0))
         #expect(rev + 0.25 == Revolutions(0.75))
         #expect(rev + Int(3) == Revolutions(0.5))
         #expect(rev + Float(1) == Revolutions(0.5))
