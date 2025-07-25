@@ -27,7 +27,7 @@ import Foundation
 // MARK:- AngleType Protocol
 
 /// A protocol that defines a type that can represent an angle.
-public protocol AAnglable: Codable, Hashable, Equatable, ExpressibleByFloatLiteral, ExpressibleByIntegerLiteral, CustomStringConvertible, CustomDebugStringConvertible, Sendable {
+public protocol AAnglable: Codable, Hashable, ExpressibleByFloatLiteral, ExpressibleByIntegerLiteral, CustomStringConvertible, CustomDebugStringConvertible, Sendable {
     /// The raw value of the angle.
     var rawValue: Double { get set }
     
