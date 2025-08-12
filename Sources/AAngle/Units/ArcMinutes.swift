@@ -24,7 +24,7 @@
 
 import Foundation
 
-public struct ArcMinutes: Hashable, Codable, Sendable, AAnglable {
+public struct ArcMinutes: AAnglable {
     public var rawValue: Double
     public var tolerance: Double
 
