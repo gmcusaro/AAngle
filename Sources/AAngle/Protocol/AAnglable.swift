@@ -108,13 +108,7 @@ public extension AAnglable {
     /// String representation of the angle.
     @inlinable
     var description: String {
-        if rawValue.isNaN {
-            return "NaN"
-        } else if rawValue.isInfinite {
-            return rawValue < 0 ? "-Inf" : "+Inf" //Or rawValue.sign == .minus
-        } else {
-            return "\(rawValue)"
-        }
+        rawValue.descriptiveString
     }
     
     /// String to debug of the angle. Handles `Double.nan` and infinity.
