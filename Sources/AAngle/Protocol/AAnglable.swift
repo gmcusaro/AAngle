@@ -34,9 +34,9 @@ public protocol AAnglable: Codable, Hashable, ExpressibleByFloatLiteral, Express
     /// The tolerance used for equality comparisons for this specific instance.
     var tolerance: Double { get set }
     
-    /// Initializes an `Anglable` instance with a raw value.
+    /// Initializes an `AAnglable` instance with a raw value.
     ///
-    /// - Parameter rawValue: The raw value of the angle in degrees.
+    /// - Parameter rawValue: The raw value of the angle in the conforming unit.
     init(_ rawValue: Double)
     
     /// The normalization value used to normalize the angle.
@@ -59,20 +59,24 @@ public protocol AAnglable: Codable, Hashable, ExpressibleByFloatLiteral, Express
     /// - Returns: A `Measurement<UnitAngle>` representing the angle.
     func toMeasurement() -> Measurement<UnitAngle>
     
-    /// Initializes an `Anglable` instance from another `Anglable` type.
+    /// Initializes an `AAnglable` instance from another `AAnglable` type.
     ///
     /// - Parameter angle: The angle to convert.
     init<T: AAnglable>(_ angle: T)
 }
 
 extension AAnglable {
-    /// Normalizes the angle by a specified value. Handles `Double.nan` by returning without modifying the value.
+    /// Normalizes the angle by a specified positive value.
+    ///
+    /// Returns without modification when either operand is non-finite or when `value <= 0`.
     ///
     /// - Parameter value: The value to normalize the angle by.
     @inlinable
     public mutating func normalize(by value: Double) {
-        guard rawValue.isFinite, value.isFinite, value != 0 else { return }
-        self.rawValue = fmod(rawValue, value)
+        guard rawValue.isFinite, value.isFinite, value > 0.0 else { return }
+        if rawValue >= 0.0, rawValue < value { return }
+        
+        rawValue = rawValue.truncatingRemainder(dividingBy: value)
         if rawValue < 0.0 { rawValue += value }
     }
     
@@ -104,6 +108,15 @@ extension AAnglable {
 public extension AAnglable {
     ///  The *default* tolerance value
     static var defaultTolerance: Double { 1e-12 }
+
+    /// Sanitizes tolerance values so comparisons stay predictable.
+    ///
+    /// - Parameter tolerance: The candidate tolerance value.
+    /// - Returns: A finite non-negative tolerance, clamped to at least `defaultTolerance`.
+    static func sanitizedTolerance(_ tolerance: Double) -> Double {
+        guard tolerance.isFinite, tolerance >= 0 else { return Self.defaultTolerance }
+        return Swift.max(tolerance, Self.defaultTolerance)
+    }
     
     /// String representation of the angle.
     @inlinable
@@ -111,7 +124,7 @@ public extension AAnglable {
         rawValue.descriptiveString
     }
     
-    /// String to debug of the angle. Handles `Double.nan` and infinity.
+    /// String to debug of the angle. Handles `NaN` and infinity explicitly.
     @inlinable
     var debugDescription: String {
 #if DEBUG
@@ -124,7 +137,7 @@ public extension AAnglable {
 #endif
     }
     
-    /// Initializes an `Anglable` instance with a default value of 0.0.
+    /// Initializes an `AAnglable` instance with a default value of 0.0.
     init() {
         self.init(0.0)
     }
@@ -134,35 +147,35 @@ public extension AAnglable {
         .init()
     }
     
-    /// Initializes an `Anglable` instance from a floating-point literal.
+    /// Initializes an `AAnglable` instance from a floating-point literal.
     ///
     /// - Parameter value: The floating-point value.
     init(floatLiteral value: Double) {
         self.init(value)
     }
     
-    /// Initializes an `Anglable` instance from an integer literal.
+    /// Initializes an `AAnglable` instance from an integer literal.
     ///
     /// - Parameter value: The integer value.
     init(integerLiteral value: Int) {
         self.init(Double(value))
     }
     
-    /// Initializes an `Anglable` instance from a binary integer.
+    /// Initializes an `AAnglable` instance from a binary integer.
     ///
     /// - Parameter value: The binary integer value.
     init<T: BinaryInteger>(_ value: T) {
         self.init(Double(value))
     }
     
-    /// Initializes an `Anglable` instance from a binary floating-point value.
+    /// Initializes an `AAnglable` instance from a binary floating-point value.
     ///
     /// - Parameter value: The binary floating-point value.
     init<T: BinaryFloatingPoint>(_ value: T) {
         self.init(Double(value))
     }
     
-    /// Adds two `Anglable` instances. Handles `Double.nan` and infinity.
+    /// Adds two `AAnglable` instances. Returns `.nan` for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -175,7 +188,7 @@ public extension AAnglable {
         return result
     }
     
-    /// Adds an `Anglable` instance and a `Double`. Handles `Double.nan` and infinity.
+    /// Adds an `AAnglable` instance and a `Double`. Returns `.nan` for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -188,7 +201,7 @@ public extension AAnglable {
         return result
     }
     
-    /// Adds an `Anglable` instance and an `Int`. Handles `Double.nan` and infinity.
+    /// Adds an `AAnglable` instance and an `Int`. Returns `.nan` for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -201,7 +214,7 @@ public extension AAnglable {
         return result
     }
     
-    /// Adds an `Anglable` instance and a binary integer. Handles `Double.nan` and infinity.
+    /// Adds an `AAnglable` instance and a binary integer. Returns `.nan` for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -214,7 +227,7 @@ public extension AAnglable {
         return result
     }
     
-    /// Adds an `Anglable` instance and a binary floating-point value. Handles `Double.nan` and infinity.
+    /// Adds an `AAnglable` instance and a binary floating-point value. Returns `.nan` for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -226,8 +239,53 @@ public extension AAnglable {
         result.normalize()
         return result
     }
+
+    /// Adds a `Double` to an angle with the numeric operand on the left-hand side.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side numeric value.
+    ///   - rhs: The right-hand side angle.
+    /// - Returns: The normalized sum of the numeric value and angle.
+    @inlinable
+    static func + (lhs: Double, rhs: Self) -> Self {
+        rhs + lhs
+    }
+
+    /// Adds an `Int` to an angle with the numeric operand on the left-hand side.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side numeric value.
+    ///   - rhs: The right-hand side angle.
+    /// - Returns: The normalized sum of the numeric value and angle.
+    @inlinable
+    static func + (lhs: Int, rhs: Self) -> Self {
+        rhs + lhs
+    }
+
+    /// Subtracts an angle from a `Double` with the numeric operand on the left-hand side.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side numeric value.
+    ///   - rhs: The right-hand side angle.
+    /// - Returns: The normalized difference, or `.nan` if `lhs` is non-finite.
+    @inlinable
+    static func - (lhs: Double, rhs: Self) -> Self {
+        guard lhs.isFinite else { return Self(.nan) }
+        return Self(lhs) - rhs
+    }
+
+    /// Subtracts an angle from an `Int` with the numeric operand on the left-hand side.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side numeric value.
+    ///   - rhs: The right-hand side angle.
+    /// - Returns: The normalized difference.
+    @inlinable
+    static func - (lhs: Int, rhs: Self) -> Self {
+        Self(lhs) - rhs
+    }
     
-    /// Adds an `Anglable` instance to another `Anglable` instance in place. Handles `Double.nan` by doing nothing.
+    /// Adds an `AAnglable` instance to another `AAnglable` instance in place. Returns without mutation for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -238,7 +296,7 @@ public extension AAnglable {
         lhs.normalize()
     }
     
-    /// Adds a `Double` to an `Anglable` instance in place. Handles `Double.nan` by doing nothing.
+    /// Adds a `Double` to an `AAnglable` instance in place. Returns without mutation for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -249,7 +307,7 @@ public extension AAnglable {
         lhs.normalize()
     }
     
-    /// Adds an `Int` to an `Anglable` instance in place.
+    /// Adds an `Int` to an `AAnglable` instance in place.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -260,17 +318,18 @@ public extension AAnglable {
         lhs.normalize()
     }
     
-    /// Adds an `Int` to an `Anglable` instance in place.
+    /// Adds a binary integer to an `AAnglable` instance in place.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side value.
     static func += <T: BinaryInteger>(lhs: inout Self, rhs: T){
         guard lhs.rawValue.isFinite else { return }
         lhs.rawValue += Double(rhs)
         lhs.normalize()
     }
     
-    /// Adds a binary floating-point value to an `Anglable` instance in place. Handles `Double.nan` by doing nothing.
+    /// Adds a binary floating-point value to an `AAnglable` instance in place. Returns without mutation for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -281,7 +340,7 @@ public extension AAnglable {
         lhs.normalize()
     }
     
-    /// Subtracts two `Anglable` instances. Handles `Double.nan`.
+    /// Subtracts two `AAnglable` instances. Returns `.nan` for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -294,7 +353,7 @@ public extension AAnglable {
         return result
     }
     
-    /// Subtracts a `Double` from an `Anglable` instance. Handles `Double.nan`.
+    /// Subtracts a `Double` from an `AAnglable` instance. Returns `.nan` for non-finite operands.
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
@@ -306,7 +365,7 @@ public extension AAnglable {
         return result
     }
     
-    /// Subtracts an `Int` from an `Anglable` instance. Handles `Double.nan`.
+    /// Subtracts an `Int` from an `AAnglable` instance. Returns `.nan` for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -319,7 +378,7 @@ public extension AAnglable {
         return result
     }
     
-    /// Subtracts a binary integer from an `Anglable` instance. Handles `Double.nan`.
+    /// Subtracts a binary integer from an `AAnglable` instance. Returns `.nan` for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -332,7 +391,7 @@ public extension AAnglable {
         return result
     }
     
-    /// Subtracts a binary floating-point value from an `Anglable` instance. Handles `Double.nan`.
+    /// Subtracts a binary floating-point value from an `AAnglable` instance. Returns `.nan` for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -345,7 +404,7 @@ public extension AAnglable {
         return result
     }
     
-    /// Subtracts an `Anglable` instance from another `Anglable` instance in place. Handles `Double.nan` by doing nothing.
+    /// Subtracts an `AAnglable` instance from another `AAnglable` instance in place. Returns without mutation for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -356,7 +415,7 @@ public extension AAnglable {
         lhs.normalize()
     }
     
-    /// Subtracts a `Double` from an `Anglable` instance in place. Handles `Double.nan` by doing nothing.
+    /// Subtracts a `Double` from an `AAnglable` instance in place. Returns without mutation for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -367,7 +426,7 @@ public extension AAnglable {
         lhs.normalize()
     }
     
-    /// Subtracts an `Int` from an `Anglable` instance in place.
+    /// Subtracts an `Int` from an `AAnglable` instance in place.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -378,7 +437,7 @@ public extension AAnglable {
         lhs.normalize()
     }
     
-    /// Subtracts a binary integer from an `Anglable` instance in place.
+    /// Subtracts a binary integer from an `AAnglable` instance in place.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -389,18 +448,18 @@ public extension AAnglable {
         lhs.normalize()
     }
     
-    /// Subtracts a binary floating-point value from an `Anglable` instance in place. Handles `Double.nan` by doing nothing.
+    /// Subtracts a binary floating-point value from an `AAnglable` instance in place. Returns without mutation for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
     static func -= <T: BinaryFloatingPoint>(lhs: inout Self, rhs: T) {
         guard lhs.rawValue.isFinite && rhs.isFinite else { return }
-        lhs.rawValue -= lhs.rawValue + Double(rhs)
+        lhs.rawValue -= Double(rhs)
         lhs.normalize()
     }
     
-    /// Multiplies two `Anglable` instances. Handles `Double.nan`.
+    /// Multiplies two `AAnglable` instances. Returns `.nan` for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -411,7 +470,7 @@ public extension AAnglable {
         return Self(lhs.rawValue * rhs.rawValue)
     }
     
-    /// Multiplies an `Anglable` instance by a `Double`. Handles `Double.nan`.
+    /// Multiplies an `AAnglable` instance by a `Double`. Returns `.nan` for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -422,7 +481,7 @@ public extension AAnglable {
         return Self(lhs.rawValue * rhs)
     }
     
-    /// Multiplies an `Anglable` instance by an `Int`. Handles `Double.nan`.
+    /// Multiplies an `AAnglable` instance by an `Int`. Returns `.nan` for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -433,7 +492,7 @@ public extension AAnglable {
         return Self(lhs.rawValue * Double(rhs))
     }
     
-    /// Multiplies an `Anglable` instance by a binary integer. Handles `Double.nan`.
+    /// Multiplies an `AAnglable` instance by a binary integer. Returns `.nan` for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -444,7 +503,7 @@ public extension AAnglable {
         return Self(lhs.rawValue * Double(rhs))
     }
     
-    /// Multiplies an `Anglable` instance by a binary floating-point value. Handles `Double.nan`.
+    /// Multiplies an `AAnglable` instance by a binary floating-point value. Returns `.nan` for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -455,74 +514,78 @@ public extension AAnglable {
         return Self(lhs.rawValue * Double(rhs))
     }
     
-    /// Divides two `Anglable` instances. Handles `Double.nan`.
+    /// Divides two `AAnglable` instances.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle.
-    /// - Returns: The quotient of the two angles.
+    /// - Returns: The quotient of the two angles, or `.nan` for non-finite values or division by zero.
     static func / (lhs: Self, rhs: Self) -> Self {
-        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
+        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite, rhs.rawValue != 0 else { return Self(.nan) }
         return Self(lhs.rawValue / rhs.rawValue)
     }
     
-    /// Divides an `Anglable` instance by a `Double`. Handles `Double.nan`.
+    /// Divides an `AAnglable` instance by a `Double`.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
-    /// - Returns: The quotient of the angle and the value.
+    /// - Returns: The quotient of the angle and the value, or `.nan` for non-finite values or division by zero.
     static func / (lhs: Self, rhs: Double) -> Self {
-        guard lhs.rawValue.isFinite, rhs.isFinite else { return Self(.nan) }
+        guard lhs.rawValue.isFinite, rhs.isFinite, rhs != 0 else { return Self(.nan) }
         return Self(lhs.rawValue / rhs)
     }
     
-    /// Divides an `Anglable` instance by an `Int`.
+    /// Divides an `AAnglable` instance by an `Int`.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
-    /// - Returns: The quotient of the angle and the value.
-    static func / (lhs: Self, rhs: Int) -> Self { Self(lhs.rawValue / Double(rhs)) }
+    /// - Returns: The quotient of the angle and the value, or `.nan` for non-finite values or division by zero.
+    static func / (lhs: Self, rhs: Int) -> Self {
+        guard lhs.rawValue.isFinite, rhs != 0 else { return Self(.nan) }
+        return Self(lhs.rawValue / Double(rhs))
+    }
     
-    /// Divides an `Anglable` instance by a binary integer. Handles `Double.nan`.
+    /// Divides an `AAnglable` instance by a binary integer.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
-    /// - Returns: The quotient of the angle and the value.
+    /// - Returns: The quotient of the angle and the value, or `.nan` for non-finite values or division by zero.
     static func / <T: BinaryInteger>(lhs: Self, rhs: T) -> Self {
-        guard lhs.rawValue.isFinite else { return Self(.nan) }
+        guard lhs.rawValue.isFinite, rhs != 0 else { return Self(.nan) }
         return Self(lhs.rawValue / Double(rhs))
     }
     
-    /// Divides an `Anglable` instance by a binary floating-point value. Handles `Double.nan`.
+    /// Divides an `AAnglable` instance by a binary floating-point value.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side value.
-    /// - Returns: The quotient of the angle and the value.
+    /// - Returns: The quotient of the angle and the value, or `.nan` for non-finite values or division by zero.
     static func / <T: BinaryFloatingPoint>(lhs: Self, rhs: T) -> Self {
-        guard lhs.rawValue.isFinite && rhs.isFinite else { return Self(.nan) }
+        guard lhs.rawValue.isFinite && rhs.isFinite && rhs != 0 else { return Self(.nan) }
         return Self(lhs.rawValue / Double(rhs))
     }
     
-    /// Compares two `Anglable` instances for equality. Handles `Double.nan`. Handles `Double.nan` correctly.
+    /// Compares two `AAnglable` instances for equality within tolerance.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle.
     /// - Returns: `true` if the angles are equal within the tolerance, otherwise `false`.
+    ///   Returns `false` when either value is non-finite.
     static func == (lhs: Self, rhs: Self) -> Bool {
-        if lhs.rawValue.isNaN || rhs.rawValue.isNaN {
-            return false // NaN is never equal to anything, including itself.
-        }
-        // Use the maximum of the two tolerances for comparison
-        let effectiveTolerance = max(lhs.tolerance, rhs.tolerance)
+        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return false }
+        let effectiveTolerance = Swift.max(
+            Self.sanitizedTolerance(lhs.tolerance),
+            Self.sanitizedTolerance(rhs.tolerance)
+        )
         return abs(lhs.rawValue - rhs.rawValue) <= effectiveTolerance
     }
     
-    /// Compares two `Anglable` instances to determine if the left-hand side is less than the right-hand side.
+    /// Compares two `AAnglable` instances to determine if the left-hand side is less than the right-hand side.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -530,7 +593,7 @@ public extension AAnglable {
     /// - Returns: `true` if the left-hand side is less than the right-hand side, otherwise `false`.
     static func < (lhs: Self, rhs: Self) -> Bool { lhs.rawValue < rhs.rawValue}
     
-    /// Compares two `Anglable` instances to determine if the left-hand side is less than or equal to the right-hand side.
+    /// Compares two `AAnglable` instances to determine if the left-hand side is less than or equal to the right-hand side.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -538,7 +601,7 @@ public extension AAnglable {
     /// - Returns: `true` if the left-hand side is less than or equal to the right-hand side, otherwise `false`.
     static func <= (lhs: Self, rhs: Self) -> Bool { lhs.rawValue <= rhs.rawValue }
     
-    /// Compares two `Anglable` instances to determine if the left-hand side is greater than the right-hand side.
+    /// Compares two `AAnglable` instances to determine if the left-hand side is greater than the right-hand side.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -546,7 +609,7 @@ public extension AAnglable {
     /// - Returns: `true` if the left-hand side is greater than the right-hand side, otherwise `false`.
     static func > (lhs: Self, rhs: Self) -> Bool { lhs.rawValue > rhs.rawValue }
     
-    /// Compares two `Anglable` instances to determine if the left-hand side is greater than or equal to the right-hand side.
+    /// Compares two `AAnglable` instances to determine if the left-hand side is greater than or equal to the right-hand side.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -554,10 +617,10 @@ public extension AAnglable {
     /// - Returns: `true` if the left-hand side is greater than or equal to the right-hand side, otherwise `false`.
     static func >= (lhs: Self, rhs: Self) -> Bool { lhs.rawValue >= rhs.rawValue }
     
-    /// Negates an `Anglable` instance. Handles `Double.nan`.
+    /// Negates an `AAnglable` instance. Returns `.nan` for non-finite operands.
     ///
     /// - Parameter operand: The angle to negate.
-    /// - Returns: A new `Anglable` instance with the negated value.
+    /// - Returns: A new `AAnglable` instance with the negated value.
     prefix static func - (operand: Self) -> Self {
         guard operand.rawValue.isFinite else { return Self(.nan) }
         return Self(-operand.rawValue)
@@ -565,48 +628,119 @@ public extension AAnglable {
 }
 
 public extension AAnglable {
-    /// Generic initializer to convert any AAnglable type to the current type.
-    /// This reduces redundancy across all angle structs.
+    /// Converts any `AAnglable` value into the current conforming type.
+    ///
+    /// - Parameter angle: The source angle value to convert.
     init<T: AAnglable>(_ angle: T) {
-        let valueInBase = angle.rawValue / T.normalizationValue
-        self.init(valueInBase * Self.normalizationValue)
-        self.tolerance = Swift.max(Self.defaultTolerance, angle.tolerance)
+        guard
+            Self.normalizationValue.isFinite,
+            T.normalizationValue.isFinite,
+            T.normalizationValue != 0
+        else {
+            self.init(.nan)
+            self.tolerance = Self.defaultTolerance
+            return
+        }
+
+        let scale = Self.normalizationValue / T.normalizationValue
+        if angle.rawValue.isFinite {
+            self.init(angle.rawValue * scale)
+        } else {
+            self.init(.nan)
+        }
+
+        let convertedTolerance = T.sanitizedTolerance(angle.tolerance) * abs(scale)
+        self.tolerance = Swift.max(Self.defaultTolerance, convertedTolerance)
     }
     
-    /// Converts the current angle to the specified `AngleType`. Handles `Double.nan`.
+    /// Converts the current angle to the specified `AAngleType`.
     ///
-    /// - Parameter type: The target `AngleType` to convert to.
-    /// - Returns: An instance conforming to `Anglable` representing the converted angle.
+    /// - Parameter type: The target `AAngleType` to convert to.
+    /// - Returns: An instance conforming to `AAnglable` representing the converted angle.
     func convert(to type: AAngleType) -> any AAnglable {
-        switch type {
-        case .degrees:     return Degrees(self._convert(to: Degrees.self))
-        case .radians:     return Radians(self._convert(to: Radians.self))
-        case .gradians:    return Gradians(self._convert(to: Gradians.self))
-        case .revolutions: return Revolutions(self._convert(to: Revolutions.self))
-        case .arcMinutes:  return ArcMinutes(self._convert(to: ArcMinutes.self))
-        case .arcSeconds:  return ArcSeconds(self._convert(to: ArcSeconds.self))
-        }
+        return type.initAngle(self)
     }
     
     private func _convert<T: AAnglable>(to: T.Type) -> T {
         if Self.self == T.self {
             return self as! T
         }
-        
-        guard self.rawValue.isFinite else {
-             return T(.nan)
+
+        guard
+            Self.normalizationValue.isFinite,
+            T.normalizationValue.isFinite,
+            Self.normalizationValue != 0
+        else {
+            var invalid = T(.nan)
+            invalid.tolerance = T.defaultTolerance
+            return invalid
         }
-        
-        let valueInTargetUnits = self.rawValue * (T.normalizationValue / Self.normalizationValue)
-        return T(valueInTargetUnits)
+
+        let scale = T.normalizationValue / Self.normalizationValue
+        let scaledTolerance = Self.sanitizedTolerance(self.tolerance) * abs(scale)
+
+        guard self.rawValue.isFinite else {
+            var invalid = T(.nan)
+            invalid.tolerance = Swift.max(T.defaultTolerance, scaledTolerance)
+            return invalid
+        }
+
+        var result = T(self.rawValue * scale)
+        result.tolerance = Swift.max(T.defaultTolerance, scaledTolerance)
+        return result
+    }
+
+    /// Converts the current angle to a concrete `AAnglable` type.
+    ///
+    /// - Parameter to: The destination angle type.
+    /// - Returns: The converted angle value in the destination type.
+    func converted<T: AAnglable>(to: T.Type) -> T {
+        _convert(to: T.self)
+    }
+
+    /// Compares two angles using a configurable tolerance.
+    ///
+    /// - Parameters:
+    ///   - other: The angle to compare against.
+    ///   - tolerance: An optional custom tolerance. When `nil`, the larger sanitized instance tolerance is used.
+    /// - Returns: `true` if the two values differ by no more than the effective tolerance.
+    func isApproximatelyEqual<T: AAnglable>(to other: T, tolerance: Double? = nil) -> Bool {
+        let otherConverted = other._convert(to: Self.self)
+        guard rawValue.isFinite, otherConverted.rawValue.isFinite else { return false }
+        let effectiveTolerance = tolerance.map(Self.sanitizedTolerance)
+            ?? Swift.max(
+                Self.sanitizedTolerance(self.tolerance),
+                Self.sanitizedTolerance(otherConverted.tolerance)
+            )
+        return abs(rawValue - otherConverted.rawValue) <= effectiveTolerance
+    }
+
+    /// Compares two angles for circular equivalence (for example, `0°` and `360°`).
+    ///
+    /// - Parameters:
+    ///   - other: The angle to compare against.
+    ///   - tolerance: An optional custom tolerance. When `nil`, the larger sanitized instance tolerance is used.
+    /// - Returns: `true` when the normalized circular distance is within tolerance.
+    func isEquivalent<T: AAnglable>(to other: T, tolerance: Double? = nil) -> Bool {
+        guard Self.normalizationValue.isFinite, Self.normalizationValue > 0 else { return false }
+        let lhs = self.normalized()
+        let rhs = other._convert(to: Self.self).normalized()
+        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return false }
+        let effectiveTolerance = tolerance.map(Self.sanitizedTolerance)
+            ?? Swift.max(
+                Self.sanitizedTolerance(lhs.tolerance),
+                Self.sanitizedTolerance(rhs.tolerance)
+            )
+        let delta = abs(lhs.rawValue - rhs.rawValue)
+        return Swift.min(delta, Self.normalizationValue - delta) <= effectiveTolerance
     }
     
-    /// Performs arithmetic addition on two `Anglable` instances. Handles `Double.nan` and infinity.
+    /// Performs arithmetic addition on two `AAnglable` instances. Returns `.nan` for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle.
-    /// - Returns: A new `Anglable` instance representing the sum.
+    /// - Returns: A new `AAnglable` instance representing the sum.
     static func + <T: AAnglable>(lhs: Self, rhs: T) -> Self {
         guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
         let rhsConverted = rhs._convert(to: Self.self)
@@ -615,7 +749,7 @@ public extension AAnglable {
         return result
     }
     
-    /// Adds another `Anglable` value to this instance in place. Handles `Double.nan` by doing nothing.
+    /// Adds another `AAnglable` value to this instance in place. Returns without mutation for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle to modify.
@@ -627,12 +761,12 @@ public extension AAnglable {
         lhs.normalize()
     }
     
-    /// Performs arithmetic subtraction on two `Anglable` instances. Handles `Double.nan`.
+    /// Performs arithmetic subtraction on two `AAnglable` instances. Returns `.nan` for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle.
-    /// - Returns: A new `Anglable` instance representing the difference.
+    /// - Returns: A new `AAnglable` instance representing the difference.
     static func - <T: AAnglable>(lhs: Self, rhs: T) -> Self {
         guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
         let rhsConverted = rhs._convert(to: Self.self)
@@ -641,7 +775,7 @@ public extension AAnglable {
         return result
     }
     
-    /// Subtracts another `Anglable` value from this instance in place. Handles `Double.nan` by doing nothing.
+    /// Subtracts another `AAnglable` value from this instance in place. Returns without mutation for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle to modify.
@@ -653,47 +787,48 @@ public extension AAnglable {
         lhs.normalize()
     }
     
-    /// Multiplies two `Anglable` values. Handles `Double.nan`.
+    /// Multiplies two `AAnglable` values. Returns `.nan` for non-finite operands.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle to multiply.
-    /// - Returns: A new `Anglable` instance representing the product.
+    /// - Returns: A new `AAnglable` instance representing the product.
     static func * <T: AAnglable>(lhs: Self, rhs: T) -> Self {
         guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
         let rhsConverted = rhs._convert(to: Self.self)
         return Self(lhs.rawValue * rhsConverted.rawValue)
     }
     
-    /// Divides an `Anglable` value by another `Anglable` value. Handles `Double.nan`.
+    /// Divides an `AAnglable` value by another `AAnglable` value.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle to divide by.
-    /// - Returns: A new `Anglable` instance representing the quotient.
+    /// - Returns: A new `AAnglable` instance representing the quotient, or `.nan` for non-finite values or division by zero.
     static func / <T: AAnglable>(lhs: Self, rhs: T) -> Self {
-        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
         let rhsConverted = rhs._convert(to: Self.self)
+        guard lhs.rawValue.isFinite, rhsConverted.rawValue.isFinite, rhsConverted.rawValue != 0 else { return Self(.nan) }
         return Self(lhs.rawValue / rhsConverted.rawValue)
     }
     
-    /// Compares two `Anglable` values for equality within a tolerance. Handles `Double.nan`.
+    /// Compares two `AAnglable` values for equality within a tolerance.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle to compare.
     /// - Returns: `true` if the angles are equal within the defined tolerance, otherwise `false`.
+    ///   Returns `false` when either value is non-finite.
     static func == <T: AAnglable>(lhs: Self, rhs: T) -> Bool {
-        if lhs.rawValue.isNaN || rhs.rawValue.isNaN {
-            return false
-        }
-        // Use the maximum of the two tolerances for comparison
-        let effectiveTolerance = max(lhs.tolerance, rhs.tolerance)
         let rhsConverted = rhs._convert(to: Self.self)
+        guard lhs.rawValue.isFinite, rhsConverted.rawValue.isFinite else { return false }
+        let effectiveTolerance = Swift.max(
+            Self.sanitizedTolerance(lhs.tolerance),
+            Self.sanitizedTolerance(rhsConverted.tolerance)
+        )
         return abs(lhs.rawValue - rhsConverted.rawValue) <= effectiveTolerance
     }
     
-    /// Determines whether the left-hand side `Anglable` value is less than the right-hand side.
+    /// Determines whether the left-hand side `AAnglable` value is less than the right-hand side.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -704,23 +839,24 @@ public extension AAnglable {
         return lhs.rawValue < rhsConverted.rawValue
     }
     
-    /// Determines whether the left-hand side `Anglable` value is less than or equal to the right-hand side within a tolerance. Handles `Double.nan`.
+    /// Determines whether the left-hand side `AAnglable` value is less than or equal to the right-hand side within a tolerance.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle to compare.
     /// - Returns: `true` if `lhs` is less than or equal to `rhs` within the defined tolerance, otherwise `false`.
+    ///   Returns `false` when either value is non-finite.
     static func <= <T: AAnglable>(lhs: Self, rhs: T) -> Bool {
-        if lhs.rawValue.isNaN || rhs.rawValue.isNaN {
-            return false
-        }
-        // Use the maximum of the two tolerances for comparison
-        let effectiveTolerance = max(lhs.tolerance, rhs.tolerance)
         let rhsConverted = rhs._convert(to: Self.self)
+        guard lhs.rawValue.isFinite, rhsConverted.rawValue.isFinite else { return false }
+        let effectiveTolerance = Swift.max(
+            Self.sanitizedTolerance(lhs.tolerance),
+            Self.sanitizedTolerance(rhsConverted.tolerance)
+        )
         return lhs.rawValue <= rhsConverted.rawValue + effectiveTolerance
     }
     
-    /// Determines whether the left-hand side `Anglable` value is greater than the right-hand side.
+    /// Determines whether the left-hand side `AAnglable` value is greater than the right-hand side.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
@@ -731,19 +867,20 @@ public extension AAnglable {
         return lhs.rawValue > rhsConverted.rawValue
     }
     
-    /// Determines whether the left-hand side `Anglable` value is greater than or equal to the right-hand side within a tolerance. Handles `Double.nan`.
+    /// Determines whether the left-hand side `AAnglable` value is greater than or equal to the right-hand side within a tolerance.
     ///
     /// - Parameters:
     ///   - lhs: The left-hand side angle.
     ///   - rhs: The right-hand side angle to compare.
     /// - Returns: `true` if `lhs` is greater than or equal to `rhs` within the defined tolerance, otherwise `false`.
+    ///   Returns `false` when either value is non-finite.
     static func >= <T: AAnglable>(lhs: Self, rhs: T) -> Bool {
-        if lhs.rawValue.isNaN || rhs.rawValue.isNaN {
-           return false
-        }
-        // Use the maximum of the two tolerances for comparison
-        let effectiveTolerance = max(lhs.tolerance, rhs.tolerance)
         let rhsConverted = rhs._convert(to: Self.self)
+        guard lhs.rawValue.isFinite, rhsConverted.rawValue.isFinite else { return false }
+        let effectiveTolerance = Swift.max(
+            Self.sanitizedTolerance(lhs.tolerance),
+            Self.sanitizedTolerance(rhsConverted.tolerance)
+        )
         return lhs.rawValue >= rhsConverted.rawValue - effectiveTolerance
     }
 }
