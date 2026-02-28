@@ -59,8 +59,8 @@ public extension AAngleType {
 
     /// Initializes an angle instance using a `Double` value.
     ///
-    /// - Parameter value: The value of the angle in the specified `AngleType` unit.
-    /// - Returns: An `Anglable` instance representing the angle.
+    /// - Parameter value: The value of the angle in the specified `AAngleType` unit.
+    /// - Returns: An `AAnglable` instance representing the angle.
     @inlinable
     func initAngle(_ value: Double) -> any AAnglable {
         return metatype.init(value)
@@ -68,8 +68,8 @@ public extension AAngleType {
 
     /// Initializes an angle instance using a floating-point value.
     ///
-    /// - Parameter value: The value of the angle in the specified `AngleType` unit.
-    /// - Returns: An `Anglable` instance representing the angle.
+    /// - Parameter value: The value of the angle in the specified `AAngleType` unit.
+    /// - Returns: An `AAnglable` instance representing the angle.
     @inlinable
     func initAngle<T: BinaryFloatingPoint>(_ value: T) -> any AAnglable {
         initAngle(Double(value))
@@ -77,8 +77,8 @@ public extension AAngleType {
 
     /// Initializes an angle instance using an integer value.
     ///
-    /// - Parameter value: The value of the angle in the specified `AngleType` unit.
-    /// - Returns: An `Anglable` instance representing the angle.
+    /// - Parameter value: The value of the angle in the specified `AAngleType` unit.
+    /// - Returns: An `AAnglable` instance representing the angle.
     @inlinable
     func initAngle<T: BinaryInteger>(_ value: T) -> any AAnglable {
         initAngle(Double(value))
