@@ -4,17 +4,40 @@
 <img height="150" alt="AAngle" src="https://raw.githubusercontent.com/gmcusaro/AAngle/e462b55c2cdcb514d992c1c561fa5a30ebfc3af1/Resources/aangle.svg">
 </div>
 
-`Angle` is a Swift package that provides a flexible and extensible way to work with different types of angles, including [degrees](https://en.wikipedia.org/wiki/Degree_(angle)), [radians](https://en.wikipedia.org/wiki/Radian), [gradians](https://en.wikipedia.org/wiki/Gradian), [revolutions/turns](https://en.wikipedia.org/wiki/Turn_(angle)), [arc minutes](https://en.wikipedia.org/wiki/Minute_and_second_of_arc), and [arc seconds](https://en.wikipedia.org/wiki/Minute_and_second_of_arc).
+`AAngle` is a Swift package that provides a flexible and extensible way to work with different types of angles, including [degrees](https://en.wikipedia.org/wiki/Degree_(angle)), [radians](https://en.wikipedia.org/wiki/Radian), [gradians](https://en.wikipedia.org/wiki/Gradian), [revolutions/turns](https://en.wikipedia.org/wiki/Turn_(angle)), [arc minutes](https://en.wikipedia.org/wiki/Minute_and_second_of_arc), and [arc seconds](https://en.wikipedia.org/wiki/Minute_and_second_of_arc).
 
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fgmcusaro%2FAAngle%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/gmcusaro/AAngle)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fgmcusaro%2FAAngle%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/gmcusaro/AAngle)
 
+* [Why AAngle?](#why-aangle)
 * [Features](#features)
 * [Installation](#installation)
 * [Basic Usage](#basic-usage)
 * [Operators](#operators)
 * [Normalization](#normalization)
 * [Trigonometry](#trigonometry)
+
+## Why AAngle?
+
+### Key Design Rationale
+
+**Normalization by default (where appropriate):** Addition, subtraction, and assignment operations are normalized by default so values stay in the expected circular range.
+
+**Preserve magnitude when needed:** Multiplication and division (without assignment) intentionally keep unwrapped magnitudes for workflows where full rotational distance matters.
+
+**Type consistency:** Binary operations (`+`, `-`) return the left-hand side type, so behavior remains predictable.
+
+**Cross-type correctness:** Comparisons and arithmetic across angle units perform safe internal conversions.
+
+**Robust floating-point comparisons:** Instance tolerances and `sanitizedTolerance(_:)` keep comparisons stable even with invalid values (`NaN`, infinities, negatives).
+
+### Advantages
+
+- Safer math defaults for circular values.
+- Fewer unit-conversion mistakes across APIs.
+- Better behavior under floating-point edge cases.
+- Clean integration with `Measurement<UnitAngle>`.
+- Ergonomic model code via the `@AAngle` property wrapper.
 
 ## Features
 
@@ -30,69 +53,109 @@
 
 **Type-Safe Units:** Uses an `AAngleType` enum to represent units, ensuring type safety and avoiding string-based errors.
 
-**Extensible Protocol:** Designed with the `Anglable` protocol to make it easy to add custom angle types.
+**Extensible Protocol:** Designed with the `AAnglable` protocol to make it easy to add custom angle types.
 
 **Complete Operators Support:** Supports all basic arithmetic operators, comparison operators, including `==`, `<`, `<=`, `>`, `>=`, as well as compound assignment operators like `+=`, `-=`, ensuring correct normalization behavior.
 
 **Trigonometry:** A set of basic trigonometric functions: `sine`, `cosine`, `tangent`, `cotangent`, `secant`, `cosecant`. Triangle calculations: `oppositeLeg(hypotenuse:)`, `adjacentLeg(hypotenuse:)`, `hypotenuse(fromOppositeLeg:)`, `hypotenuse(fromAdjacentLeg:)`, `oppositeLeg(fromAdjacentLeg:)`, `adjacentLeg(fromOppositeLeg:)`.
 
+**Property Wrapper Support:** Use `@AAngle` to store a concrete unit type while automatically converting assignments from any `AAnglable` type.
+
 ## Installation
 
 You can install the `AAngle` package via [Swift Package Manager](https://www.swift.org/documentation/package-manager/).
 
-**Using Xcode:**
+### Using Xcode
+
 1.  Go to **File** > **Add Packages...**
 2.  Enter the repository URL: `https://github.com/gmcusaro/AAngle.git`.
 3.  Choose "Up to Next Major Version" and specify `1.2.1` (or your initial version) as the starting version.
 4.  Click "Add Package".
 
-**Using [Packages](https://www.swift.org/packages):**
+### Using [Package.swift](https://www.swift.org/packages)
+
 Add the following dependency to your `Package.swift` file:
 ```swift
 dependencies: [
     .package(url: "https://github.com/gmcusaro/AAngle.git", from: "1.0.0")
 ]
 ```
-And then adding the product to any target that needs access to the library:
+Then add the product to any target that needs access to the library:
 ```
 .product(name: "AAngle", package: "AAngle"),
 ```
 
 ## Basic Usage
 
+### Create Angles
+
 ```swift
 import AAngle
 
-// Create angles
 let degrees = Degrees(90)
 let radians = Radians(Double.pi / 2)
-let revolutions = AAngleType.revolutions.initAngle(1)
-let grads = Gradians() // Init 0.0 grad
-let arcMinutes = ArcMinutes.zero // Init 0.0 arc minutes
-let arcSeconds = AAngleType.arcSeconds.initAngle(324000.00000000) // Init 324000.00000000 arc seconds
-
-// Angle conversions
-let degreesFromRadians = Degrees(radians) // Convert radians to degrees
-let degreesFromRevolutions: Degrees = revolutions.convert(to: .degrees) as! Degrees // Convert to any Anglable type
-
-// Using Measurement
-let measurement = degrees.toMeasurement()
-print(measurement) // 90.0 °
-
-// Accessing to rawValue, description and debugDescription
-print(degrees.rawValue) // 90.0
-print(degrees.description) // "90.0"
-print(degrees.debugDescription) // "Angle(Degrees): rawValue = 90.0, normalized = 90.0"
-
-// Angle conversions
-let degreesToRadians = Degrees(radians) // Convert radians to degrees
-let degreesConvertGradians: Degrees = grads.convert(to: .degrees) as! Degrees // Convert to any Anglable type
-let degreesFromGradians = AAngleType.degrees.initAngle(grads) // Convert Anglable to any AAngleType
+let gradians = Gradians(100)
+let revolutions = Revolutions(0.25)
+let arcMinutes = ArcMinutes.zero
+let arcSeconds = ArcSeconds(324000)
 ```
+
+### Conversions and `AAngleType`
+
+```swift
+import AAngle
+
+// Angle conversions
+let radians = Radians(Double.pi / 2)
+let revolutions = Revolutions(0.25)
+let degreesFromRadians = Degrees(radians) // Convert radians to degrees
+let degreesFromRevolutions: Degrees = revolutions.convert(to: .degrees) as! Degrees // Convert to any AAnglable type
+
+// Build angles from AAngleType
+let oneTurn = AAngleType.revolutions.initAngle(1)
+let fullCircleArcSeconds = AAngleType.arcSeconds.initAngle(1_296_000)
+
+// Convert via AAngleType
+let degreesFromGradians = AAngleType.degrees.initAngle(Gradians(100)) as! Degrees
+let radiansFromType = AAngleType.radians.initAngle(Degrees(180)) as! Radians
+```
+
+### Measurement and Introspection
+
+```swift
+import AAngle
+
+let degrees = Degrees(90)
+let measurement = degrees.toMeasurement()
+print(measurement)            // 90.0 °
+print(degrees.rawValue)       // 90.0
+print(degrees.description)    // "90.0"
+print(degrees.debugDescription)
+// "Angle(Degrees): rawValue = 90.0, normalized = 90.0"
+```
+
+### Property Wrapper (`@AAngle`)
+
+Use `@AAngle` when you want a property to always store a concrete angle unit while accepting assignments from other `AAnglable` types.
+
+```swift
+import AAngle
+
+struct RotationModel {
+    @AAngle var heading = Degrees(45)
+    @AAngle(.radians) var orientation: Radians = Degrees(180)
+}
+
+var model = RotationModel()
+model.heading = Radians(.pi / 2)     // Automatically converted to Degrees(90)
+model.orientation = Revolutions(0.5) // Automatically converted to Radians(.pi)
+```
+
+Use the explicit unit argument (`@AAngle(.degrees)`, `@AAngle(.radians)`, etc.) when you want a runtime check that the declared wrapper unit matches storage.
 
 ## Operators
 
-The `AAngle` types are designed with a core principle: to represent normalized angles whenever appropriate.  Normalization ensures consistency and prevents ambiguity by keeping angles within a predefined range (e.g., 0-360 degrees for `Degrees`, 0-2π radians for `Radians`).  However, some operations, like multiplication and division by scalars, can produce mathematically valid results *outside* this standard range, and preserving these values can be important.  Therefore, the operators in the `Angle` package have specific normalization behaviors:
+The `AAngle` types are designed with a core principle: to represent normalized angles whenever appropriate.  Normalization ensures consistency and prevents ambiguity by keeping angles within a predefined range (e.g., 0-360 degrees for `Degrees`, 0-2π radians for `Radians`).  However, some operations, like multiplication and division by scalars, can produce mathematically valid results *outside* this standard range, and preserving these values can be important.  Therefore, the operators in `AAngle` have specific normalization behaviors:
 
 **`+, -` Addition and Subtraction:**  These operators *always* produce normalized results. The resulting angle is normalized to the standard range of the *left-hand side* operand's type.  This ensures that adding or subtracting angles always results in a value within the expected bounds.  The type of the result is the same as the type of the left-hand side operand.
 
@@ -140,12 +203,12 @@ var degrees = Degrees(10)
 degrees /= 2  // Result: Degrees(90) (normalized)
 ```
 
-**`==, <, <=, >, >=` Comparison Operators:**  Comparison operators work correctly between `Anglable` instances of *different* types.  Before comparison, the right-hand side operand is converted to the type of the left-hand side operand.  This ensures consistent and accurate comparisons, regardless of the original units. The comparisons use a tolerance value to account for potential floating-point inaccuracies.
+**`==, <, <=, >, >=` Comparison Operators:**  Comparison operators work correctly between `AAnglable` instances of *different* types.  Before comparison, the right-hand side operand is converted to the type of the left-hand side operand.  This ensures consistent and accurate comparisons, regardless of the original units. The comparisons use a tolerance value to account for potential floating-point inaccuracies.
 
 ```swift
 let degrees = Degrees(90)
 let radians = Radians(Double.pi / 2)
-print(degrees == 180)     // true
+print(degrees == 90)      // true
 print(degrees == radians) // true (comparison after converting radians to degrees)
 print(degrees < Int(89))  // false
 print(degrees < radians)  // false
@@ -153,7 +216,7 @@ print(degrees < radians)  // false
 
 ## Normalization
 
-The `Anglable` protocol provides methods for normalizing angle values, ensuring they fall within a defined range.  Normalization is crucial for consistency and preventing ambiguity in angle representations. Each conforming type (e.g., `Degrees`, `Radians`) defines its own `normalizationValue` which is a `static` property of the `Anglable` protocol.
+The `AAnglable` protocol provides methods for normalizing angle values, ensuring they fall within a defined range.  Normalization is crucial for consistency and preventing ambiguity in angle representations. Each conforming type (e.g., `Degrees`, `Radians`) defines its own `normalizationValue` which is a `static` property of `AAnglable`.
 
 **`normalize()`**: Normalizes the angle *in place* to the standard range defined by the conforming type's `normalizationValue`.  For example, for `Degrees`, this would be the range 0 to 360 (exclusive of 360). The `normalize()` methods modify the existing angle.
 
@@ -162,51 +225,59 @@ var myAngle = Degrees(450)
 myAngle.normalize() // myAngle is now 90
 ```
 
-**`normalized() -> Self`**: Returns a *new* `Anglable` instance containing the normalized value.  The original instance is *not* modified. The `normalized()` methods create a new, normalized angle instance.
+**`normalized() -> Self`**: Returns a *new* `AAnglable` instance containing the normalized value.  The original instance is *not* modified. The `normalized()` methods create a new, normalized angle instance.
 
 ```swift
 let myAngle = Degrees(450)
 let normalizedAngle = myAngle.normalized() // normalizedAngle is 90, myAngle is still 450
 ```
 
-**`normalize(by value: Double)`***: Normalizes the angle *in place* using a custom normalization value. This is useful if you need a range other than the default. The `normalize()` methods modify the existing angle.
+**`normalize(by value: Double)`**: Normalizes the angle *in place* using a custom normalization value. This is useful if you need a range other than the default. The `normalize()` methods modify the existing angle.
 
 ```swift
 var myAngle = Radians(3 * Double.pi) // 3π
 myAngle.normalize(by: Double.pi) // myAngle is now π (normalized to the range 0 to π)
 ```
 
-**`normalized(by value: Double) -> Self`**: Returns a *new* `Anglable` instance, normalized using the provided custom normalization value. The original instance is not modified. The `normalized()` methods create a new, normalized angle instance.
+**`normalized(by value: Double) -> Self`**: Returns a *new* `AAnglable` instance, normalized using the provided custom normalization value. The original instance is not modified. The `normalized()` methods create a new, normalized angle instance.
 
 ```swift
 let myAngle = Radians(3 * Double.pi) // 3π
 let normalizedAngle = myAngle.normalized(by: Double.pi) // normalizedAngle is π, myAngle is still 3π
 ```
 
-### Key Design Rationale:
-
-**Normalization by Default (where appropriate):** Addition, subtraction, and assignment operations are normalized by default to maintain the core principle of representing angles within a standard range. This avoids common errors and ensures consistency.
-
-**Preserving Magnitude (when necessary):**  Multiplication and division (without assignment) preserve the magnitude of the result, even if it falls outside the normalized range. This is essential for many mathematical operations where the "unwrapped" angle is significant.
-
-**Type Consistency:**  Binary operations (`+`, `-`) return a value of the *same type* as the left-hand side operand. This makes the behavior predictable and helps prevent accidental type changes.
-
-**Cross-Type Comparisons:** Comparison operators handle different `Anglable` types correctly by performing internal conversions.
-
-**Tolerance:** The comparison operations are performed using a tolerance to prevent errors due to floating-point precision limitations.
-
 ### Tolerance
 
-In the protocol `Anglable` the default tolerane value is `1-e12`. For each angle type is possible set custom value overriding a default static tolerance.
+In `AAnglable`, the default tolerance value is `1e-12`. Each angle instance can override `tolerance` when you need looser or stricter floating-point comparisons.
 
 ```swift
+print(Degrees.defaultTolerance) // 1e-12
+
 var deg1 = Degrees(89.999999999999) // tolerance starts at Degrees.defaultTolerance (1e-12)
 var deg2 = Degrees(89.99999)        // tolerance starts at Degrees.defaultTolerance (1e-12)
 print(deg1 == deg2)                 // false
 
 deg1.tolerance = 1e-5               // Set custom tolerance for deg1
+print(deg1.tolerance)               // 1e-5 (different from default 1e-12)
 print(deg1 == deg2)                 // true
 ```
+
+### Sanitized Tolerance
+
+Use `sanitizedTolerance(_:)` to make tolerance values safe before comparison logic:
+
+- Non-finite values (`NaN`, `+/-infinity`) fall back to `defaultTolerance`.
+- Negative values fall back to `defaultTolerance`.
+- Very small positive values are clamped up to `defaultTolerance`.
+
+```swift
+print(Degrees.sanitizedTolerance(.nan))       // 1e-12
+print(Degrees.sanitizedTolerance(-1))         // 1e-12
+print(Degrees.sanitizedTolerance(1e-15))      // 1e-12
+print(Degrees.sanitizedTolerance(1e-5))       // 1e-5
+```
+
+`AAngle` comparison APIs (`==`, `<`, `<=`, `>=`, `isApproximatelyEqual`, `isEquivalent`) use sanitized tolerance values internally.
 
 ## Trigonometry
 
