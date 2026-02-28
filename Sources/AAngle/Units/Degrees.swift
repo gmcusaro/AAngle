@@ -51,9 +51,9 @@ public struct Degrees: AAnglable {
 }
 
 extension Degrees {
-    /// Computes the opposite angle by adding 180 degrees and normalizing.
+    /// Computes the supplementary angle (`180 - value`) and normalizes the result.
     ///
-    /// - Returns: The opposite angle in degrees.
+    /// - Returns: The supplementary angle in degrees.
     @inlinable
     public var opposite: Degrees {
         var oppositeAngle = Degrees(180.0 - self.rawValue)

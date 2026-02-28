@@ -25,8 +25,9 @@
 import Foundation
 
 extension Measurement where UnitType == UnitAngle {
-    /// Initializes a `Measurement<UnitAngle>` from an `Anglable` instance.
-    /// - Parameter anglable: An instance conforming to the `Anglable` protocol.
+    /// Initializes a `Measurement<UnitAngle>` from an `AAnglable` instance.
+    ///
+    /// - Parameter aanglable: An instance conforming to the `AAnglable` protocol.
     public init(_ aanglable: any AAnglable) {
         let measurement = aanglable.toMeasurement()
         self.init(value: measurement.value, unit: measurement.unit)
