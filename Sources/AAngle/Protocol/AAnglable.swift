@@ -565,11 +565,12 @@ public extension AAnglable {
 }
 
 public extension AAnglable {
-    /// Converts the current angle to another `Anglable` type.
-    ///
-    /// - Parameter angle: The angle to convert.
+    /// Generic initializer to convert any AAnglable type to the current type.
+    /// This reduces redundancy across all angle structs.
     init<T: AAnglable>(_ angle: T) {
-        self.init(angle._convert(to: Self.self).rawValue)
+        let valueInBase = angle.rawValue / T.normalizationValue
+        self.init(valueInBase * Self.normalizationValue)
+        self.tolerance = Swift.max(Self.defaultTolerance, angle.tolerance)
     }
     
     /// Converts the current angle to the specified `AngleType`. Handles `Double.nan`.

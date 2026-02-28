@@ -44,16 +44,16 @@ public extension AAngleType {
 }
 
 public extension AAngleType {    
-    /// Resolves the corresponding angle type initializer.
-    @usableFromInline
-    internal var angleInitializer: (Double) -> any AAnglable {
+    /// Returns the metatype for the current angle unit.
+    /// This improves flexibility when dynamically creating angles.
+    var metatype: any AAnglable.Type {
         switch self {
-        case .degrees:     return Degrees.init
-        case .radians:     return Radians.init
-        case .gradians:    return Gradians.init
-        case .revolutions: return Revolutions.init
-        case .arcMinutes:  return ArcMinutes.init
-        case .arcSeconds:  return ArcSeconds.init
+        case .gradians: return Gradians.self
+        case .degrees: return Degrees.self
+        case .radians: return Radians.self
+        case .revolutions: return Revolutions.self
+        case .arcMinutes: return ArcMinutes.self
+        case .arcSeconds: return ArcSeconds.self
         }
     }
 
@@ -63,7 +63,7 @@ public extension AAngleType {
     /// - Returns: An `Anglable` instance representing the angle.
     @inlinable
     func initAngle(_ value: Double) -> any AAnglable {
-        return angleInitializer(value)
+        return metatype.init(value)
     }
 
     /// Initializes an angle instance using a floating-point value.
