@@ -35,18 +35,26 @@ public struct AAngle<Wrapped: AAnglable>: Sendable, Codable, Hashable {
     public var wrappedValue: Wrapped
 
     /// Standard initializer.
+    ///
+    /// - Parameter wrappedValue: The initial angle value to store.
     public init(wrappedValue: Wrapped) {
         self.wrappedValue = wrappedValue
     }
 
     /// Conversion initializer.
     /// Enables assigning any `AAnglable` and storing it as `Wrapped`.
+    ///
+    /// - Parameter wrappedValue: The input angle value to convert and store as `Wrapped`.
     public init<T: AAnglable>(wrappedValue: T) {
         self.wrappedValue = Wrapped(wrappedValue)
     }
 
     /// Explicit unit initializer for property-wrapper argument syntax.
     /// Validates the declared unit matches the wrapped storage type.
+    ///
+    /// - Parameters:
+    ///   - wrappedValue: The input angle value to convert and store as `Wrapped`.
+    ///   - type: The expected runtime unit for the wrapped storage.
     public init<T: AAnglable>(wrappedValue: T, _ type: AAngleType) {
         precondition(
             ObjectIdentifier(type.metatype) == ObjectIdentifier(Wrapped.self),
