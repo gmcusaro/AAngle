@@ -123,4 +123,27 @@ struct DegreesTests {
         deg1.tolerance = 1e-5
         #expect(deg1 == deg2)
     }
+
+    @Test func testRegressionAndNumericSymmetry() {
+        var deg = Degrees(180)
+        deg -= Float(45)
+        #expect(deg == Degrees(135))
+
+        #expect((20 + deg) == Degrees(155))
+        #expect((400 - deg) == Degrees(265))
+
+        #expect((deg / 0.0).rawValue.isNaN)
+        #expect((deg / 0).rawValue.isNaN)
+    }
+
+    @Test func testCircularEquivalenceAndToleranceSanitization() {
+        #expect(Degrees(0).isEquivalent(to: Degrees(360)))
+        #expect(Degrees(0).isEquivalent(to: Revolutions(1)))
+
+        var a = Degrees(10.0)
+        var b = Degrees(10.0 + 5e-13)
+        a.tolerance = -.infinity
+        b.tolerance = .nan
+        #expect(a == b)
+    }
 }
