@@ -118,25 +118,6 @@ public extension AAnglable {
         return Swift.max(tolerance, Self.defaultTolerance)
     }
     
-    /// String representation of the angle.
-    @inlinable
-    var description: String {
-        rawValue.descriptiveString
-    }
-    
-    /// String to debug of the angle. Handles `NaN` and infinity explicitly.
-    @inlinable
-    var debugDescription: String {
-#if DEBUG
-        let prefix = "Angle(\(type(of: self))): "
-        if rawValue.isNaN { return prefix + "rawValue = NaN" }
-        if rawValue.isInfinite { return prefix + "rawValue = \(rawValue < 0 ? "-Inf" : "+Inf")" }
-        return prefix + "rawValue = \(rawValue), normalized = \(normalized().rawValue)"
-#else
-        return String(describing: self)
-#endif
-    }
-    
     /// Initializes an `AAnglable` instance with a default value of 0.0.
     init() {
         self.init(0.0)
@@ -198,6 +179,25 @@ public extension AAnglable {
 
         let convertedTolerance = T.sanitizedTolerance(angle.tolerance) * abs(scale)
         self.tolerance = Swift.max(Self.defaultTolerance, convertedTolerance)
+    }
+    
+    /// String representation of the angle.
+    @inlinable
+    var description: String {
+        rawValue.descriptiveString
+    }
+    
+    /// String to debug of the angle. Handles `NaN` and infinity explicitly.
+    @inlinable
+    var debugDescription: String {
+#if DEBUG
+        let prefix = "Angle(\(type(of: self))): "
+        if rawValue.isNaN { return prefix + "rawValue = NaN" }
+        if rawValue.isInfinite { return prefix + "rawValue = \(rawValue < 0 ? "-Inf" : "+Inf")" }
+        return prefix + "rawValue = \(rawValue), normalized = \(normalized().rawValue)"
+#else
+        return String(describing: self)
+#endif
     }
     
     /// Converts the current angle to the specified `AAngleType`.
@@ -281,6 +281,15 @@ public extension AAnglable {
         let delta = abs(lhs.rawValue - rhs.rawValue)
         return Swift.min(delta, Self.normalizationValue - delta) <= effectiveTolerance
     }
+
+    /// Negates an `AAnglable` instance. Returns `.nan` for non-finite operands.
+    ///
+    /// - Parameter operand: The angle to negate.
+    /// - Returns: A new `AAnglable` instance with the negated value.
+    prefix static func - (operand: Self) -> Self {
+        guard operand.rawValue.isFinite else { return Self(.nan) }
+        return Self(-operand.rawValue)
+    }
     
     /// Adds two `AAnglable` instances. Returns `.nan` for non-finite operands.
     ///
@@ -291,6 +300,20 @@ public extension AAnglable {
     static func + (lhs: Self, rhs: Self) -> Self {
         guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
         var result = Self(lhs.rawValue + rhs.rawValue)
+        result.normalize()
+        return result
+    }
+
+    /// Performs arithmetic addition on two `AAnglable` instances. Returns `.nan` for non-finite operands.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side angle.
+    /// - Returns: A new `AAnglable` instance representing the sum.
+    static func + <T: AAnglable>(lhs: Self, rhs: T) -> Self {
+        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
+        let rhsConverted = rhs._convert(to: Self.self)
+        var result = Self(lhs.rawValue + rhsConverted.rawValue)
         result.normalize()
         return result
     }
@@ -369,29 +392,6 @@ public extension AAnglable {
         rhs + lhs
     }
 
-    /// Subtracts an angle from a `Double` with the numeric operand on the left-hand side.
-    ///
-    /// - Parameters:
-    ///   - lhs: The left-hand side numeric value.
-    ///   - rhs: The right-hand side angle.
-    /// - Returns: The normalized difference, or `.nan` if `lhs` is non-finite.
-    @inlinable
-    static func - (lhs: Double, rhs: Self) -> Self {
-        guard lhs.isFinite else { return Self(.nan) }
-        return Self(lhs) - rhs
-    }
-
-    /// Subtracts an angle from an `Int` with the numeric operand on the left-hand side.
-    ///
-    /// - Parameters:
-    ///   - lhs: The left-hand side numeric value.
-    ///   - rhs: The right-hand side angle.
-    /// - Returns: The normalized difference.
-    @inlinable
-    static func - (lhs: Int, rhs: Self) -> Self {
-        Self(lhs) - rhs
-    }
-    
     /// Adds an `AAnglable` instance to another `AAnglable` instance in place. Returns without mutation for non-finite operands.
     ///
     /// - Parameters:
@@ -402,7 +402,19 @@ public extension AAnglable {
         lhs.rawValue += rhs.rawValue
         lhs.normalize()
     }
-    
+
+    /// Adds another `AAnglable` value to this instance in place. Returns without mutation for non-finite operands.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle to modify.
+    ///   - rhs: The right-hand side angle to add.
+    static func += <T: AAnglable>(lhs: inout Self, rhs: T) {
+        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return }
+        let rhsConverted = rhs._convert(to: Self.self)
+        lhs.rawValue += rhsConverted.rawValue
+        lhs.normalize()
+    }
+
     /// Adds a `Double` to an `AAnglable` instance in place. Returns without mutation for non-finite operands.
     ///
     /// - Parameters:
@@ -446,7 +458,7 @@ public extension AAnglable {
         lhs.rawValue += Double(rhs)
         lhs.normalize()
     }
-    
+
     /// Subtracts two `AAnglable` instances. Returns `.nan` for non-finite operands.
     ///
     /// - Parameters:
@@ -456,6 +468,20 @@ public extension AAnglable {
     static func - (lhs: Self, rhs: Self) -> Self {
         guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return Self(.nan) }
         var result = Self(lhs.rawValue - rhs.rawValue)
+        result.normalize()
+        return result
+    }
+
+    /// Performs arithmetic subtraction on two `AAnglable` instances. Returns `.nan` for non-finite operands.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side angle.
+    /// - Returns: A new `AAnglable` instance representing the difference.
+    static func - <T: AAnglable>(lhs: Self, rhs: T) -> Self {
+        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
+        let rhsConverted = rhs._convert(to: Self.self)
+        var result = Self(lhs.rawValue - rhsConverted.rawValue)
         result.normalize()
         return result
     }
@@ -510,7 +536,30 @@ public extension AAnglable {
         result.normalize()
         return result
     }
-    
+
+    /// Subtracts an angle from a `Double` with the numeric operand on the left-hand side.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side numeric value.
+    ///   - rhs: The right-hand side angle.
+    /// - Returns: The normalized difference, or `.nan` if `lhs` is non-finite.
+    @inlinable
+    static func - (lhs: Double, rhs: Self) -> Self {
+        guard lhs.isFinite else { return Self(.nan) }
+        return Self(lhs) - rhs
+    }
+
+    /// Subtracts an angle from an `Int` with the numeric operand on the left-hand side.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side numeric value.
+    ///   - rhs: The right-hand side angle.
+    /// - Returns: The normalized difference.
+    @inlinable
+    static func - (lhs: Int, rhs: Self) -> Self {
+        Self(lhs) - rhs
+    }
+
     /// Subtracts an `AAnglable` instance from another `AAnglable` instance in place. Returns without mutation for non-finite operands.
     ///
     /// - Parameters:
@@ -519,6 +568,18 @@ public extension AAnglable {
     static func -= (lhs: inout Self, rhs: Self) {
         guard lhs.rawValue.isFinite && rhs.rawValue.isFinite else { return }
         lhs.rawValue -= rhs.rawValue
+        lhs.normalize()
+    }
+
+    /// Subtracts another `AAnglable` value from this instance in place. Returns without mutation for non-finite operands.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle to modify.
+    ///   - rhs: The right-hand side angle to subtract.
+    static func -= <T: AAnglable>(lhs: inout Self, rhs: T) {
+        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return }
+        let rhsConverted = rhs._convert(to: Self.self)
+        lhs.rawValue -= rhsConverted.rawValue
         lhs.normalize()
     }
     
@@ -565,7 +626,7 @@ public extension AAnglable {
         lhs.rawValue -= Double(rhs)
         lhs.normalize()
     }
-    
+
     /// Multiplies two `AAnglable` instances. Returns `.nan` for non-finite operands.
     ///
     /// - Parameters:
@@ -575,6 +636,18 @@ public extension AAnglable {
     static func * (lhs: Self, rhs: Self) -> Self {
         guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
         return Self(lhs.rawValue * rhs.rawValue)
+    }
+
+    /// Multiplies two `AAnglable` values. Returns `.nan` for non-finite operands.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side angle to multiply.
+    /// - Returns: A new `AAnglable` instance representing the product.
+    static func * <T: AAnglable>(lhs: Self, rhs: T) -> Self {
+        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
+        let rhsConverted = rhs._convert(to: Self.self)
+        return Self(lhs.rawValue * rhsConverted.rawValue)
     }
     
     /// Multiplies an `AAnglable` instance by a `Double`. Returns `.nan` for non-finite operands.
@@ -620,7 +693,7 @@ public extension AAnglable {
         guard lhs.rawValue.isFinite, rhs.isFinite else { return Self(.nan) }
         return Self(lhs.rawValue * Double(rhs))
     }
-    
+
     /// Divides two `AAnglable` instances.
     ///
     /// - Parameters:
@@ -630,6 +703,18 @@ public extension AAnglable {
     static func / (lhs: Self, rhs: Self) -> Self {
         guard lhs.rawValue.isFinite, rhs.rawValue.isFinite, rhs.rawValue != 0 else { return Self(.nan) }
         return Self(lhs.rawValue / rhs.rawValue)
+    }
+
+    /// Divides an `AAnglable` value by another `AAnglable` value.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side angle to divide by.
+    /// - Returns: A new `AAnglable` instance representing the quotient, or `.nan` for non-finite values or division by zero.
+    static func / <T: AAnglable>(lhs: Self, rhs: T) -> Self {
+        let rhsConverted = rhs._convert(to: Self.self)
+        guard lhs.rawValue.isFinite, rhsConverted.rawValue.isFinite, rhsConverted.rawValue != 0 else { return Self(.nan) }
+        return Self(lhs.rawValue / rhsConverted.rawValue)
     }
     
     /// Divides an `AAnglable` instance by a `Double`.
@@ -675,124 +760,7 @@ public extension AAnglable {
         guard lhs.rawValue.isFinite && rhs.isFinite && rhs != 0 else { return Self(.nan) }
         return Self(lhs.rawValue / Double(rhs))
     }
-    
-    /// Compares two `AAnglable` instances to determine if the left-hand side is less than the right-hand side.
-    ///
-    /// - Parameters:
-    ///   - lhs: The left-hand side angle.
-    ///   - rhs: The right-hand side angle.
-    /// - Returns: `true` if the left-hand side is less than the right-hand side, otherwise `false`.
-    static func < (lhs: Self, rhs: Self) -> Bool { lhs.rawValue < rhs.rawValue}
-    
-    /// Compares two `AAnglable` instances to determine if the left-hand side is less than or equal to the right-hand side.
-    ///
-    /// - Parameters:
-    ///   - lhs: The left-hand side angle.
-    ///   - rhs: The right-hand side angle.
-    /// - Returns: `true` if the left-hand side is less than or equal to the right-hand side, otherwise `false`.
-    static func <= (lhs: Self, rhs: Self) -> Bool { lhs.rawValue <= rhs.rawValue }
-    
-    /// Compares two `AAnglable` instances to determine if the left-hand side is greater than the right-hand side.
-    ///
-    /// - Parameters:
-    ///   - lhs: The left-hand side angle.
-    ///   - rhs: The right-hand side angle.
-    /// - Returns: `true` if the left-hand side is greater than the right-hand side, otherwise `false`.
-    static func > (lhs: Self, rhs: Self) -> Bool { lhs.rawValue > rhs.rawValue }
-    
-    /// Compares two `AAnglable` instances to determine if the left-hand side is greater than or equal to the right-hand side.
-    ///
-    /// - Parameters:
-    ///   - lhs: The left-hand side angle.
-    ///   - rhs: The right-hand side angle.
-    /// - Returns: `true` if the left-hand side is greater than or equal to the right-hand side, otherwise `false`.
-    static func >= (lhs: Self, rhs: Self) -> Bool { lhs.rawValue >= rhs.rawValue }
-    
-    /// Negates an `AAnglable` instance. Returns `.nan` for non-finite operands.
-    ///
-    /// - Parameter operand: The angle to negate.
-    /// - Returns: A new `AAnglable` instance with the negated value.
-    prefix static func - (operand: Self) -> Self {
-        guard operand.rawValue.isFinite else { return Self(.nan) }
-        return Self(-operand.rawValue)
-    }
-    
-    /// Performs arithmetic addition on two `AAnglable` instances. Returns `.nan` for non-finite operands.
-    ///
-    /// - Parameters:
-    ///   - lhs: The left-hand side angle.
-    ///   - rhs: The right-hand side angle.
-    /// - Returns: A new `AAnglable` instance representing the sum.
-    static func + <T: AAnglable>(lhs: Self, rhs: T) -> Self {
-        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
-        let rhsConverted = rhs._convert(to: Self.self)
-        var result = Self(lhs.rawValue + rhsConverted.rawValue)
-        result.normalize()
-        return result
-    }
-    
-    /// Adds another `AAnglable` value to this instance in place. Returns without mutation for non-finite operands.
-    ///
-    /// - Parameters:
-    ///   - lhs: The left-hand side angle to modify.
-    ///   - rhs: The right-hand side angle to add.
-    static func += <T: AAnglable>(lhs: inout Self, rhs: T) {
-        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return }
-        let rhsConverted = rhs._convert(to: Self.self)
-        lhs.rawValue += rhsConverted.rawValue
-        lhs.normalize()
-    }
-    
-    /// Performs arithmetic subtraction on two `AAnglable` instances. Returns `.nan` for non-finite operands.
-    ///
-    /// - Parameters:
-    ///   - lhs: The left-hand side angle.
-    ///   - rhs: The right-hand side angle.
-    /// - Returns: A new `AAnglable` instance representing the difference.
-    static func - <T: AAnglable>(lhs: Self, rhs: T) -> Self {
-        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
-        let rhsConverted = rhs._convert(to: Self.self)
-        var result = Self(lhs.rawValue - rhsConverted.rawValue)
-        result.normalize()
-        return result
-    }
-    
-    /// Subtracts another `AAnglable` value from this instance in place. Returns without mutation for non-finite operands.
-    ///
-    /// - Parameters:
-    ///   - lhs: The left-hand side angle to modify.
-    ///   - rhs: The right-hand side angle to subtract.
-    static func -= <T: AAnglable>(lhs: inout Self, rhs: T) {
-        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return }
-        let rhsConverted = rhs._convert(to: Self.self)
-        lhs.rawValue -= rhsConverted.rawValue
-        lhs.normalize()
-    }
-    
-    /// Multiplies two `AAnglable` values. Returns `.nan` for non-finite operands.
-    ///
-    /// - Parameters:
-    ///   - lhs: The left-hand side angle.
-    ///   - rhs: The right-hand side angle to multiply.
-    /// - Returns: A new `AAnglable` instance representing the product.
-    static func * <T: AAnglable>(lhs: Self, rhs: T) -> Self {
-        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return Self(.nan) }
-        let rhsConverted = rhs._convert(to: Self.self)
-        return Self(lhs.rawValue * rhsConverted.rawValue)
-    }
-    
-    /// Divides an `AAnglable` value by another `AAnglable` value.
-    ///
-    /// - Parameters:
-    ///   - lhs: The left-hand side angle.
-    ///   - rhs: The right-hand side angle to divide by.
-    /// - Returns: A new `AAnglable` instance representing the quotient, or `.nan` for non-finite values or division by zero.
-    static func / <T: AAnglable>(lhs: Self, rhs: T) -> Self {
-        let rhsConverted = rhs._convert(to: Self.self)
-        guard lhs.rawValue.isFinite, rhsConverted.rawValue.isFinite, rhsConverted.rawValue != 0 else { return Self(.nan) }
-        return Self(lhs.rawValue / rhsConverted.rawValue)
-    }
-    
+
     /// Compares two same-unit angles using instance tolerance.
     ///
     /// - Parameters:
@@ -802,7 +770,7 @@ public extension AAnglable {
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.isApproximatelyEqual(to: rhs)
     }
-    
+
     /// Compares two `AAnglable` values for equality within a tolerance.
     ///
     /// - Parameters:
@@ -813,7 +781,56 @@ public extension AAnglable {
     static func == <T: AAnglable>(lhs: Self, rhs: T) -> Bool {
         lhs.isApproximatelyEqual(to: rhs)
     }
-    
+
+    /// Compares an `AAnglable` value with a `Double` within tolerance.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side numeric value.
+    /// - Returns: `true` if the values are approximately equal, otherwise `false`.
+    ///   Returns `false` when either value is non-finite.
+    static func == (lhs: Self, rhs: Double) -> Bool {
+        lhs.isApproximatelyEqual(to: Self(rhs))
+    }
+
+    /// Compares an `AAnglable` value with an `Int` within tolerance.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side numeric value.
+    /// - Returns: `true` if the values are approximately equal, otherwise `false`.
+    static func == (lhs: Self, rhs: Int) -> Bool {
+        lhs == Double(rhs)
+    }
+
+    /// Compares an `AAnglable` value with a binary integer within tolerance.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side numeric value.
+    /// - Returns: `true` if the values are approximately equal, otherwise `false`.
+    static func == <T: BinaryInteger>(lhs: Self, rhs: T) -> Bool {
+        lhs == Double(rhs)
+    }
+
+    /// Compares an `AAnglable` value with a binary floating-point value within tolerance.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side numeric value.
+    /// - Returns: `true` if the values are approximately equal, otherwise `false`.
+    static func == <T: BinaryFloatingPoint>(lhs: Self, rhs: T) -> Bool {
+        lhs == Double(rhs)
+    }
+
+    /// Compares two `AAnglable` instances to determine if the left-hand side is less than the right-hand side.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side angle.
+    /// - Returns: `true` if the left-hand side is less than the right-hand side, otherwise `false`.
+    static func < (lhs: Self, rhs: Self) -> Bool { lhs.rawValue < rhs.rawValue}
+
     /// Determines whether the left-hand side `AAnglable` value is less than the right-hand side.
     ///
     /// - Parameters:
@@ -824,7 +841,55 @@ public extension AAnglable {
         let rhsConverted = rhs._convert(to: Self.self)
         return lhs.rawValue < rhsConverted.rawValue
     }
-    
+
+    /// Determines whether the left-hand side `AAnglable` value is less than a `Double`.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side numeric value in the same unit as `lhs`.
+    /// - Returns: `true` if `lhs` is less than `rhs`, otherwise `false`.
+    static func < (lhs: Self, rhs: Double) -> Bool {
+        lhs.rawValue < rhs
+    }
+
+    /// Determines whether the left-hand side `AAnglable` value is less than an `Int`.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side numeric value in the same unit as `lhs`.
+    /// - Returns: `true` if `lhs` is less than `rhs`, otherwise `false`.
+    static func < (lhs: Self, rhs: Int) -> Bool {
+        lhs < Double(rhs)
+    }
+
+    /// Determines whether the left-hand side `AAnglable` value is less than a binary integer.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side numeric value in the same unit as `lhs`.
+    /// - Returns: `true` if `lhs` is less than `rhs`, otherwise `false`.
+    static func < <T: BinaryInteger>(lhs: Self, rhs: T) -> Bool {
+        lhs < Double(rhs)
+    }
+
+    /// Determines whether the left-hand side `AAnglable` value is less than a binary floating-point value.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side numeric value in the same unit as `lhs`.
+    /// - Returns: `true` if `lhs` is less than `rhs`, otherwise `false`.
+    static func < <T: BinaryFloatingPoint>(lhs: Self, rhs: T) -> Bool {
+        lhs < Double(rhs)
+    }
+
+    /// Compares two `AAnglable` instances to determine if the left-hand side is less than or equal to the right-hand side.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side angle.
+    /// - Returns: `true` if the left-hand side is less than or equal to the right-hand side, otherwise `false`.
+    static func <= (lhs: Self, rhs: Self) -> Bool { lhs.rawValue <= rhs.rawValue }
+
     /// Determines whether the left-hand side `AAnglable` value is less than or equal to the right-hand side within a tolerance.
     ///
     /// - Parameters:
@@ -841,7 +906,55 @@ public extension AAnglable {
         )
         return lhs.rawValue <= rhsConverted.rawValue + effectiveTolerance
     }
-    
+
+    /// Determines whether the left-hand side `AAnglable` value is less than or equal to a `Double`.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side numeric value in the same unit as `lhs`.
+    /// - Returns: `true` if `lhs` is less than or equal to `rhs`, otherwise `false`.
+    static func <= (lhs: Self, rhs: Double) -> Bool {
+        lhs.rawValue <= rhs
+    }
+
+    /// Determines whether the left-hand side `AAnglable` value is less than or equal to an `Int`.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side numeric value in the same unit as `lhs`.
+    /// - Returns: `true` if `lhs` is less than or equal to `rhs`, otherwise `false`.
+    static func <= (lhs: Self, rhs: Int) -> Bool {
+        lhs <= Double(rhs)
+    }
+
+    /// Determines whether the left-hand side `AAnglable` value is less than or equal to a binary integer.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side numeric value in the same unit as `lhs`.
+    /// - Returns: `true` if `lhs` is less than or equal to `rhs`, otherwise `false`.
+    static func <= <T: BinaryInteger>(lhs: Self, rhs: T) -> Bool {
+        lhs <= Double(rhs)
+    }
+
+    /// Determines whether the left-hand side `AAnglable` value is less than or equal to a binary floating-point value.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side numeric value in the same unit as `lhs`.
+    /// - Returns: `true` if `lhs` is less than or equal to `rhs`, otherwise `false`.
+    static func <= <T: BinaryFloatingPoint>(lhs: Self, rhs: T) -> Bool {
+        lhs <= Double(rhs)
+    }
+
+    /// Compares two `AAnglable` instances to determine if the left-hand side is greater than the right-hand side.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side angle.
+    /// - Returns: `true` if the left-hand side is greater than the right-hand side, otherwise `false`.
+    static func > (lhs: Self, rhs: Self) -> Bool { lhs.rawValue > rhs.rawValue }
+
     /// Determines whether the left-hand side `AAnglable` value is greater than the right-hand side.
     ///
     /// - Parameters:
@@ -852,7 +965,55 @@ public extension AAnglable {
         let rhsConverted = rhs._convert(to: Self.self)
         return lhs.rawValue > rhsConverted.rawValue
     }
-    
+
+    /// Determines whether the left-hand side `AAnglable` value is greater than a `Double`.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side numeric value in the same unit as `lhs`.
+    /// - Returns: `true` if `lhs` is greater than `rhs`, otherwise `false`.
+    static func > (lhs: Self, rhs: Double) -> Bool {
+        lhs.rawValue > rhs
+    }
+
+    /// Determines whether the left-hand side `AAnglable` value is greater than an `Int`.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side numeric value in the same unit as `lhs`.
+    /// - Returns: `true` if `lhs` is greater than `rhs`, otherwise `false`.
+    static func > (lhs: Self, rhs: Int) -> Bool {
+        lhs > Double(rhs)
+    }
+
+    /// Determines whether the left-hand side `AAnglable` value is greater than a binary integer.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side numeric value in the same unit as `lhs`.
+    /// - Returns: `true` if `lhs` is greater than `rhs`, otherwise `false`.
+    static func > <T: BinaryInteger>(lhs: Self, rhs: T) -> Bool {
+        lhs > Double(rhs)
+    }
+
+    /// Determines whether the left-hand side `AAnglable` value is greater than a binary floating-point value.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side numeric value in the same unit as `lhs`.
+    /// - Returns: `true` if `lhs` is greater than `rhs`, otherwise `false`.
+    static func > <T: BinaryFloatingPoint>(lhs: Self, rhs: T) -> Bool {
+        lhs > Double(rhs)
+    }
+
+    /// Compares two `AAnglable` instances to determine if the left-hand side is greater than or equal to the right-hand side.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side angle.
+    /// - Returns: `true` if the left-hand side is greater than or equal to the right-hand side, otherwise `false`.
+    static func >= (lhs: Self, rhs: Self) -> Bool { lhs.rawValue >= rhs.rawValue }
+
     /// Determines whether the left-hand side `AAnglable` value is greater than or equal to the right-hand side within a tolerance.
     ///
     /// - Parameters:
@@ -868,5 +1029,45 @@ public extension AAnglable {
             Self.sanitizedTolerance(rhsConverted.tolerance)
         )
         return lhs.rawValue >= rhsConverted.rawValue - effectiveTolerance
+    }
+
+    /// Determines whether the left-hand side `AAnglable` value is greater than or equal to a `Double`.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side numeric value in the same unit as `lhs`.
+    /// - Returns: `true` if `lhs` is greater than or equal to `rhs`, otherwise `false`.
+    static func >= (lhs: Self, rhs: Double) -> Bool {
+        lhs.rawValue >= rhs
+    }
+
+    /// Determines whether the left-hand side `AAnglable` value is greater than or equal to an `Int`.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side numeric value in the same unit as `lhs`.
+    /// - Returns: `true` if `lhs` is greater than or equal to `rhs`, otherwise `false`.
+    static func >= (lhs: Self, rhs: Int) -> Bool {
+        lhs >= Double(rhs)
+    }
+
+    /// Determines whether the left-hand side `AAnglable` value is greater than or equal to a binary integer.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side numeric value in the same unit as `lhs`.
+    /// - Returns: `true` if `lhs` is greater than or equal to `rhs`, otherwise `false`.
+    static func >= <T: BinaryInteger>(lhs: Self, rhs: T) -> Bool {
+        lhs >= Double(rhs)
+    }
+
+    /// Determines whether the left-hand side `AAnglable` value is greater than or equal to a binary floating-point value.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side numeric value in the same unit as `lhs`.
+    /// - Returns: `true` if `lhs` is greater than or equal to `rhs`, otherwise `false`.
+    static func >= <T: BinaryFloatingPoint>(lhs: Self, rhs: T) -> Bool {
+        lhs >= Double(rhs)
     }
 }
