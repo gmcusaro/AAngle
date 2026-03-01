@@ -103,4 +103,16 @@ struct ArcSecondsTests {
         #expect(nanArcSeconds.description == "NaN")
     }
 
+    @Test func testArcSecondsApproximateAndEquivalent() {
+        #expect(ArcSeconds(324000).isApproximatelyEqual(to: Degrees(90)))
+        #expect(!ArcSeconds(324000).isApproximatelyEqual(to: ArcSeconds(325000), tolerance: 1))
+        #expect(ArcSeconds(3600).isEquivalent(to: ArcSeconds(1299600)))
+    }
+
+    @Test func testArcSecondsIsEquivalent() {
+        #expect(ArcSeconds(7200).isEquivalent(to: ArcSeconds(1303200)))
+        #expect(ArcSeconds(648000).isEquivalent(to: Degrees(180)))
+        #expect(!ArcSeconds(3600).isEquivalent(to: ArcSeconds(7200), tolerance: 1))
+    }
+
 }

@@ -106,4 +106,16 @@ struct GradiansTests {
         #expect(negInfGradians.description == "-Inf")
         #expect(nanGradians.description == "NaN")
     }
+
+    @Test func testGradiansApproximateAndEquivalent() {
+        #expect(Gradians(100).isApproximatelyEqual(to: Degrees(90)))
+        #expect(!Gradians(100).isApproximatelyEqual(to: Gradians(100.01), tolerance: 0.001))
+        #expect(Gradians(10).isEquivalent(to: Gradians(410)))
+    }
+
+    @Test func testGradiansIsEquivalent() {
+        #expect(Gradians(50).isEquivalent(to: Gradians(450)))
+        #expect(Gradians(100).isEquivalent(to: Degrees(90)))
+        #expect(!Gradians(10).isEquivalent(to: Gradians(20), tolerance: 0.001))
+    }
 }

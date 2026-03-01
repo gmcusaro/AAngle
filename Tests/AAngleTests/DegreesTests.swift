@@ -139,11 +139,19 @@ struct DegreesTests {
     @Test func testCircularEquivalenceAndToleranceSanitization() {
         #expect(Degrees(0).isEquivalent(to: Degrees(360)))
         #expect(Degrees(0).isEquivalent(to: Revolutions(1)))
+        #expect(Degrees(10).isApproximatelyEqual(to: Degrees(10.0000000000005)))
+        #expect(!Degrees(10).isApproximatelyEqual(to: Degrees(10.01), tolerance: 0.001))
 
         var a = Degrees(10.0)
         var b = Degrees(10.0 + 5e-13)
         a.tolerance = -.infinity
         b.tolerance = .nan
         #expect(a == b)
+    }
+
+    @Test func testDegreesIsEquivalent() {
+        #expect(Degrees(45).isEquivalent(to: Degrees(405)))
+        #expect(Degrees(0).isEquivalent(to: Revolutions(1)))
+        #expect(!Degrees(10).isEquivalent(to: Degrees(20), tolerance: 0.001))
     }
 }

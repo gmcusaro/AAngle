@@ -99,7 +99,17 @@ struct ArcMinutesTests {
         #expect(infArcMinutes.description == "+Inf")
         #expect(negInfArcMinutes.description == "-Inf")
         #expect(nanArcMinutes.description == "NaN")
-        
-        #expect(Degrees(0).isEquivalent(to: Degrees(360)))
+    }
+
+    @Test func testArcMinutesApproximateAndEquivalent() {
+        #expect(ArcMinutes(5400).isApproximatelyEqual(to: Degrees(90)))
+        #expect(!ArcMinutes(5400).isApproximatelyEqual(to: ArcMinutes(5410), tolerance: 1))
+        #expect(ArcMinutes(600).isEquivalent(to: ArcMinutes(22200)))
+    }
+
+    @Test func testArcMinutesIsEquivalent() {
+        #expect(ArcMinutes(1200).isEquivalent(to: ArcMinutes(22800)))
+        #expect(ArcMinutes(10800).isEquivalent(to: Degrees(180)))
+        #expect(!ArcMinutes(600).isEquivalent(to: ArcMinutes(900), tolerance: 1))
     }
 }

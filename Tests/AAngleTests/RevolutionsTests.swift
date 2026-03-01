@@ -115,4 +115,16 @@ struct RevolutionsTests {
         print("rev2: ",rev2.tolerance)
         #expect(rev1 == rev2)
     }
+
+    @Test func testRevolutionsApproximateAndEquivalent() {
+        #expect(Revolutions(0.25).isApproximatelyEqual(to: Degrees(90)))
+        #expect(!Revolutions(0.25).isApproximatelyEqual(to: Revolutions(0.3), tolerance: 0.001))
+        #expect(Revolutions(0.1).isEquivalent(to: Revolutions(1.1)))
+    }
+
+    @Test func testRevolutionsIsEquivalent() {
+        #expect(Revolutions(0.75).isEquivalent(to: Revolutions(1.75)))
+        #expect(Revolutions(0.5).isEquivalent(to: Degrees(180)))
+        #expect(!Revolutions(0.1).isEquivalent(to: Revolutions(0.2), tolerance: 0.001))
+    }
 }

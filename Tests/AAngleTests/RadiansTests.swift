@@ -108,4 +108,16 @@ struct RadiansTests {
         #expect(negInfRadians.description == "-Inf")
         #expect(nanRadians.description == "NaN")
     }
+
+    @Test func testRadiansApproximateAndEquivalent() {
+        #expect(Radians(.pi / 2).isApproximatelyEqual(to: Degrees(90)))
+        #expect(!Radians(1).isApproximatelyEqual(to: Radians(1.05), tolerance: 0.001))
+        #expect(Radians(.pi / 6).isEquivalent(to: Radians(.pi / 6 + 2 * .pi)))
+    }
+
+    @Test func testRadiansIsEquivalent() {
+        #expect(Radians(.pi / 4).isEquivalent(to: Radians(.pi / 4 + 2 * .pi)))
+        #expect(Radians(.pi).isEquivalent(to: Degrees(180)))
+        #expect(!Radians(1).isEquivalent(to: Radians(1.1), tolerance: 0.001))
+    }
 }
