@@ -55,6 +55,8 @@
 
 **Extensible Protocol:** Designed with the `AAnglable` protocol to make it easy to add custom angle types.
 
+**Floating-Point Comparison Helpers:** Includes `sanitizedTolerance(_:)`, `isApproximatelyEqual(to:tolerance:)`, and `isEquivalent(to:tolerance:)` for robust comparisons.
+
 **Complete Operators Support:** Supports all basic arithmetic operators, comparison operators, including `==`, `<`, `<=`, `>`, `>=`, as well as compound assignment operators like `+=`, `-=`, ensuring correct normalization behavior.
 
 **Trigonometry:** A set of basic trigonometric functions: `sine`, `cosine`, `tangent`, `cotangent`, `secant`, `cosecant`. Triangle calculations: `oppositeLeg(hypotenuse:)`, `adjacentLeg(hypotenuse:)`, `hypotenuse(fromOppositeLeg:)`, `hypotenuse(fromAdjacentLeg:)`, `oppositeLeg(fromAdjacentLeg:)`, `adjacentLeg(fromOppositeLeg:)`.
@@ -278,6 +280,19 @@ print(Degrees.sanitizedTolerance(1e-5))       // 1e-5
 ```
 
 `AAngle` comparison APIs (`==`, `<`, `<=`, `>=`, `isApproximatelyEqual`, `isEquivalent`) use sanitized tolerance values internally.
+
+### Comparison Helpers
+
+Use `isApproximatelyEqual(to:tolerance:)` for raw-value closeness checks, and `isEquivalent(to:tolerance:)` for circular equivalence checks (values that differ by full turns).
+
+```swift
+let a = Degrees(0)
+let b = Degrees(360)
+let c = Degrees(0.0000000000005)
+
+print(a.isApproximatelyEqual(to: c)) // true (within tolerance)
+print(a.isEquivalent(to: b))          // true (same direction on a circle)
+```
 
 ## Trigonometry
 
