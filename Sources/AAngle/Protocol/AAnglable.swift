@@ -175,6 +175,113 @@ public extension AAnglable {
         self.init(Double(value))
     }
     
+    /// Converts any `AAnglable` value into the current conforming type.
+    ///
+    /// - Parameter angle: The source angle value to convert.
+    init<T: AAnglable>(_ angle: T) {
+        guard
+            Self.normalizationValue.isFinite,
+            T.normalizationValue.isFinite,
+            T.normalizationValue != 0
+        else {
+            self.init(.nan)
+            self.tolerance = Self.defaultTolerance
+            return
+        }
+
+        let scale = Self.normalizationValue / T.normalizationValue
+        if angle.rawValue.isFinite {
+            self.init(angle.rawValue * scale)
+        } else {
+            self.init(.nan)
+        }
+
+        let convertedTolerance = T.sanitizedTolerance(angle.tolerance) * abs(scale)
+        self.tolerance = Swift.max(Self.defaultTolerance, convertedTolerance)
+    }
+    
+    /// Converts the current angle to the specified `AAngleType`.
+    ///
+    /// - Parameter type: The target `AAngleType` to convert to.
+    /// - Returns: An instance conforming to `AAnglable` representing the converted angle.
+    func convert(to type: AAngleType) -> any AAnglable {
+        return type.initAngle(self)
+    }
+    
+    private func _convert<T: AAnglable>(to: T.Type) -> T {
+        if Self.self == T.self {
+            return self as! T
+        }
+
+        guard
+            Self.normalizationValue.isFinite,
+            T.normalizationValue.isFinite,
+            Self.normalizationValue != 0
+        else {
+            var invalid = T(.nan)
+            invalid.tolerance = T.defaultTolerance
+            return invalid
+        }
+
+        let scale = T.normalizationValue / Self.normalizationValue
+        let scaledTolerance = Self.sanitizedTolerance(self.tolerance) * abs(scale)
+
+        guard self.rawValue.isFinite else {
+            var invalid = T(.nan)
+            invalid.tolerance = Swift.max(T.defaultTolerance, scaledTolerance)
+            return invalid
+        }
+
+        var result = T(self.rawValue * scale)
+        result.tolerance = Swift.max(T.defaultTolerance, scaledTolerance)
+        return result
+    }
+
+    /// Converts the current angle to a concrete `AAnglable` type.
+    ///
+    /// - Parameter to: The destination angle type.
+    /// - Returns: The converted angle value in the destination type.
+    func converted<T: AAnglable>(to: T.Type) -> T {
+        _convert(to: T.self)
+    }
+
+    /// Compares two angles using a configurable tolerance.
+    ///
+    /// - Parameters:
+    ///   - other: The angle to compare against.
+    ///   - tolerance: An optional custom tolerance. When `nil`, the larger sanitized instance tolerance is used.
+    /// - Returns: `true` if the two values differ by no more than the effective tolerance.
+    func isApproximatelyEqual<T: AAnglable>(to other: T, tolerance: Double? = nil) -> Bool {
+        let otherConverted = other._convert(to: Self.self)
+        guard rawValue.isFinite, otherConverted.rawValue.isFinite else { return false }
+        let effectiveTolerance = tolerance.map(Self.sanitizedTolerance)
+            ?? Swift.max(
+                Self.sanitizedTolerance(self.tolerance),
+                Self.sanitizedTolerance(otherConverted.tolerance)
+            )
+        return abs(rawValue - otherConverted.rawValue) <= effectiveTolerance
+    }
+
+    /// Compares two angles for circular equivalence (for example, `0°` and `360°`).
+    ///
+    /// - Parameters:
+    ///   - other: The angle to compare against.
+    ///   - tolerance: An optional custom tolerance. When `nil`, the larger sanitized instance tolerance is used.
+    /// - Returns: `true` when the normalized circular distance is within tolerance.
+    func isEquivalent<T: AAnglable>(to other: T, tolerance: Double? = nil) -> Bool {
+        guard Self.normalizationValue.isFinite, Self.normalizationValue > 0 else { return false }
+        let lhs = self.normalized()
+        let rhs = other._convert(to: Self.self).normalized()
+        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return false }
+        let effectiveTolerance = tolerance.map(Self.sanitizedTolerance)
+            ?? Swift.max(
+                Self.sanitizedTolerance(lhs.tolerance),
+                Self.sanitizedTolerance(rhs.tolerance)
+            )
+        let delta = abs(lhs.rawValue - rhs.rawValue)
+        return Swift.min(delta, Self.normalizationValue - delta) <= effectiveTolerance
+    }
+    
     /// Adds two `AAnglable` instances. Returns `.nan` for non-finite operands.
     ///
     /// - Parameters:
@@ -569,22 +676,6 @@ public extension AAnglable {
         return Self(lhs.rawValue / Double(rhs))
     }
     
-    /// Compares two `AAnglable` instances for equality within tolerance.
-    ///
-    /// - Parameters:
-    ///   - lhs: The left-hand side angle.
-    ///   - rhs: The right-hand side angle.
-    /// - Returns: `true` if the angles are equal within the tolerance, otherwise `false`.
-    ///   Returns `false` when either value is non-finite.
-    static func == (lhs: Self, rhs: Self) -> Bool {
-        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return false }
-        let effectiveTolerance = Swift.max(
-            Self.sanitizedTolerance(lhs.tolerance),
-            Self.sanitizedTolerance(rhs.tolerance)
-        )
-        return abs(lhs.rawValue - rhs.rawValue) <= effectiveTolerance
-    }
-    
     /// Compares two `AAnglable` instances to determine if the left-hand side is less than the right-hand side.
     ///
     /// - Parameters:
@@ -624,115 +715,6 @@ public extension AAnglable {
     prefix static func - (operand: Self) -> Self {
         guard operand.rawValue.isFinite else { return Self(.nan) }
         return Self(-operand.rawValue)
-    }
-}
-
-public extension AAnglable {
-    /// Converts any `AAnglable` value into the current conforming type.
-    ///
-    /// - Parameter angle: The source angle value to convert.
-    init<T: AAnglable>(_ angle: T) {
-        guard
-            Self.normalizationValue.isFinite,
-            T.normalizationValue.isFinite,
-            T.normalizationValue != 0
-        else {
-            self.init(.nan)
-            self.tolerance = Self.defaultTolerance
-            return
-        }
-
-        let scale = Self.normalizationValue / T.normalizationValue
-        if angle.rawValue.isFinite {
-            self.init(angle.rawValue * scale)
-        } else {
-            self.init(.nan)
-        }
-
-        let convertedTolerance = T.sanitizedTolerance(angle.tolerance) * abs(scale)
-        self.tolerance = Swift.max(Self.defaultTolerance, convertedTolerance)
-    }
-    
-    /// Converts the current angle to the specified `AAngleType`.
-    ///
-    /// - Parameter type: The target `AAngleType` to convert to.
-    /// - Returns: An instance conforming to `AAnglable` representing the converted angle.
-    func convert(to type: AAngleType) -> any AAnglable {
-        return type.initAngle(self)
-    }
-    
-    private func _convert<T: AAnglable>(to: T.Type) -> T {
-        if Self.self == T.self {
-            return self as! T
-        }
-
-        guard
-            Self.normalizationValue.isFinite,
-            T.normalizationValue.isFinite,
-            Self.normalizationValue != 0
-        else {
-            var invalid = T(.nan)
-            invalid.tolerance = T.defaultTolerance
-            return invalid
-        }
-
-        let scale = T.normalizationValue / Self.normalizationValue
-        let scaledTolerance = Self.sanitizedTolerance(self.tolerance) * abs(scale)
-
-        guard self.rawValue.isFinite else {
-            var invalid = T(.nan)
-            invalid.tolerance = Swift.max(T.defaultTolerance, scaledTolerance)
-            return invalid
-        }
-
-        var result = T(self.rawValue * scale)
-        result.tolerance = Swift.max(T.defaultTolerance, scaledTolerance)
-        return result
-    }
-
-    /// Converts the current angle to a concrete `AAnglable` type.
-    ///
-    /// - Parameter to: The destination angle type.
-    /// - Returns: The converted angle value in the destination type.
-    func converted<T: AAnglable>(to: T.Type) -> T {
-        _convert(to: T.self)
-    }
-
-    /// Compares two angles using a configurable tolerance.
-    ///
-    /// - Parameters:
-    ///   - other: The angle to compare against.
-    ///   - tolerance: An optional custom tolerance. When `nil`, the larger sanitized instance tolerance is used.
-    /// - Returns: `true` if the two values differ by no more than the effective tolerance.
-    func isApproximatelyEqual<T: AAnglable>(to other: T, tolerance: Double? = nil) -> Bool {
-        let otherConverted = other._convert(to: Self.self)
-        guard rawValue.isFinite, otherConverted.rawValue.isFinite else { return false }
-        let effectiveTolerance = tolerance.map(Self.sanitizedTolerance)
-            ?? Swift.max(
-                Self.sanitizedTolerance(self.tolerance),
-                Self.sanitizedTolerance(otherConverted.tolerance)
-            )
-        return abs(rawValue - otherConverted.rawValue) <= effectiveTolerance
-    }
-
-    /// Compares two angles for circular equivalence (for example, `0°` and `360°`).
-    ///
-    /// - Parameters:
-    ///   - other: The angle to compare against.
-    ///   - tolerance: An optional custom tolerance. When `nil`, the larger sanitized instance tolerance is used.
-    /// - Returns: `true` when the normalized circular distance is within tolerance.
-    func isEquivalent<T: AAnglable>(to other: T, tolerance: Double? = nil) -> Bool {
-        guard Self.normalizationValue.isFinite, Self.normalizationValue > 0 else { return false }
-        let lhs = self.normalized()
-        let rhs = other._convert(to: Self.self).normalized()
-        guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return false }
-        let effectiveTolerance = tolerance.map(Self.sanitizedTolerance)
-            ?? Swift.max(
-                Self.sanitizedTolerance(lhs.tolerance),
-                Self.sanitizedTolerance(rhs.tolerance)
-            )
-        let delta = abs(lhs.rawValue - rhs.rawValue)
-        return Swift.min(delta, Self.normalizationValue - delta) <= effectiveTolerance
     }
     
     /// Performs arithmetic addition on two `AAnglable` instances. Returns `.nan` for non-finite operands.
@@ -811,6 +793,16 @@ public extension AAnglable {
         return Self(lhs.rawValue / rhsConverted.rawValue)
     }
     
+    /// Compares two same-unit angles using instance tolerance.
+    ///
+    /// - Parameters:
+    ///   - lhs: The left-hand side angle.
+    ///   - rhs: The right-hand side angle.
+    /// - Returns: `true` if the values are approximately equal.
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.isApproximatelyEqual(to: rhs)
+    }
+    
     /// Compares two `AAnglable` values for equality within a tolerance.
     ///
     /// - Parameters:
@@ -819,13 +811,7 @@ public extension AAnglable {
     /// - Returns: `true` if the angles are equal within the defined tolerance, otherwise `false`.
     ///   Returns `false` when either value is non-finite.
     static func == <T: AAnglable>(lhs: Self, rhs: T) -> Bool {
-        let rhsConverted = rhs._convert(to: Self.self)
-        guard lhs.rawValue.isFinite, rhsConverted.rawValue.isFinite else { return false }
-        let effectiveTolerance = Swift.max(
-            Self.sanitizedTolerance(lhs.tolerance),
-            Self.sanitizedTolerance(rhsConverted.tolerance)
-        )
-        return abs(lhs.rawValue - rhsConverted.rawValue) <= effectiveTolerance
+        lhs.isApproximatelyEqual(to: rhs)
     }
     
     /// Determines whether the left-hand side `AAnglable` value is less than the right-hand side.

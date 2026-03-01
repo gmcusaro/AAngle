@@ -99,5 +99,7 @@ struct ArcMinutesTests {
         #expect(infArcMinutes.description == "+Inf")
         #expect(negInfArcMinutes.description == "-Inf")
         #expect(nanArcMinutes.description == "NaN")
+        
+        #expect(Degrees(0).isEquivalent(to: Degrees(360)))
     }
 }
