@@ -66,9 +66,9 @@ struct ArcMinutesTests {
     }
     
     @Test func testArcMinutesNaN() {
-        let nanArcMinutes = ArcMinutes(.nan)
-        let infArcMinutes = ArcMinutes(.infinity)
-        let negInfArcMinutes = ArcMinutes(-.infinity)
+        let nanArcMinutes = ArcMinutes.nan
+        let infArcMinutes = ArcMinutes.infinity
+        let negInfArcMinutes = ArcMinutes.negativeInfinity
         let value = ArcMinutes(5)
 
         #expect(nanArcMinutes.normalized().rawValue.isNaN)
@@ -83,11 +83,11 @@ struct ArcMinutesTests {
         #expect((-nanArcMinutes).rawValue.isNaN)
 
         //In-Place
-        var mutableNan = ArcMinutes(.nan)
+        var mutableNan = ArcMinutes.nan
         mutableNan += value
         #expect(mutableNan.rawValue.isNaN)
 
-        mutableNan = ArcMinutes(.nan) //Reset
+        mutableNan = ArcMinutes.nan //Reset
         mutableNan -= value
         #expect(mutableNan.rawValue.isNaN)
 

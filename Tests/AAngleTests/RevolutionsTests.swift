@@ -70,9 +70,9 @@ struct RevolutionsTests {
     }
     
     @Test func testRevolutionsNaN() {
-        let nanRevolutions = Revolutions(.nan)
-        let infRevolutions = Revolutions(.infinity)
-        let negInfRevolutions = Revolutions(-.infinity)
+        let nanRevolutions = Revolutions.nan
+        let infRevolutions = Revolutions.infinity
+        let negInfRevolutions = Revolutions.negativeInfinity
         let value = Revolutions(5)
         
         #expect(nanRevolutions.normalized().rawValue.isNaN)
@@ -87,11 +87,11 @@ struct RevolutionsTests {
         #expect((-nanRevolutions).rawValue.isNaN)
         
         //In-Place
-        var mutableNan = Revolutions(.nan)
+        var mutableNan = Revolutions.nan
         mutableNan += value
         #expect(mutableNan.rawValue.isNaN)
         
-        mutableNan = Revolutions(.nan) //Reset
+        mutableNan = Revolutions.nan //Reset
         mutableNan -= value
         #expect(mutableNan.rawValue.isNaN)
         

@@ -79,9 +79,9 @@ struct DegreesTests {
     }
     
     @Test func testDegreesNaN() {
-        let nanDegrees = Degrees(.nan)
-        let infDegrees = Degrees(.infinity)
-        let negInfDegrees = Degrees(-.infinity)
+        let nanDegrees = Degrees.nan
+        let infDegrees = Degrees.infinity
+        let negInfDegrees = Degrees.negativeInfinity
         let value = Degrees(5)
 
         #expect(nanDegrees.normalized().rawValue.isNaN, "Normalized NaN should be NaN")
@@ -100,11 +100,11 @@ struct DegreesTests {
         #expect((nanDegrees / .nan).rawValue.isNaN)
 
         //In-Place
-        var mutableNan = Degrees(.nan)
+        var mutableNan = Degrees.nan
         mutableNan += value
         #expect(mutableNan.rawValue.isNaN, "In-place addition with NaN")
 
-        mutableNan = Degrees(.nan) //Reset
+        mutableNan = Degrees.nan //Reset
         mutableNan -= value
         #expect(mutableNan.rawValue.isNaN, "In-place subtraction with NaN")
 

@@ -72,9 +72,9 @@ struct GradiansTests {
     }
     
     @Test func testGradiansNaN() {
-        let nanGradians = Gradians(.nan)
-        let infGradians = Gradians(.infinity)
-        let negInfGradians = Gradians(-.infinity)
+        let nanGradians = Gradians.nan
+        let infGradians = Gradians.infinity
+        let negInfGradians = Gradians.negativeInfinity
         let value = Gradians(5)
         
         #expect(nanGradians.normalized().rawValue.isNaN)
@@ -89,11 +89,11 @@ struct GradiansTests {
         #expect((-nanGradians).rawValue.isNaN)
         
         //In-Place
-        var mutableNan = Gradians(.nan)
+        var mutableNan = Gradians.nan
         mutableNan += value
         #expect(mutableNan.rawValue.isNaN)
         
-        mutableNan = Gradians(.nan) //Reset
+        mutableNan = Gradians.nan //Reset
         mutableNan -= value
         #expect(mutableNan.rawValue.isNaN)
         

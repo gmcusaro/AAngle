@@ -74,9 +74,9 @@ struct RadiansTests {
     }
     
     @Test func testRadiansNaN() {
-        let nanRadians = Radians(.nan)
-        let infRadians = Radians(.infinity)
-        let negInfRadians = Radians(-.infinity)
+        let nanRadians = Radians.nan
+        let infRadians = Radians.infinity
+        let negInfRadians = Radians.negativeInfinity
         let value = Radians(5)
         
         #expect(nanRadians.normalized().rawValue.isNaN)
@@ -91,11 +91,11 @@ struct RadiansTests {
         #expect((-nanRadians).rawValue.isNaN)
         
         //In-Place
-        var mutableNan = Radians(.nan)
+        var mutableNan = Radians.nan
         mutableNan += value
         #expect(mutableNan.rawValue.isNaN)
         
-        mutableNan = Radians(.nan) //Reset
+        mutableNan = Radians.nan //Reset
         mutableNan -= value
         #expect(mutableNan.rawValue.isNaN)
         

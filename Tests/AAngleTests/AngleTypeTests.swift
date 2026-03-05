@@ -72,7 +72,7 @@ struct AAngleTypesTests {
     }
 
     @Test func testNonFinitePropagationThroughAAngleType() {
-        let nanSource = Degrees(.nan)
+        let nanSource = Degrees.nan
         let allTypes: [AAngleType] = [
             .gradians, .degrees, .radians, .revolutions, .arcSeconds, .arcMinutes
         ]
@@ -82,6 +82,27 @@ struct AAngleTypesTests {
             #expect(converted.rawValue.isNaN)
             #expect(ObjectIdentifier(Swift.type(of: converted)) == ObjectIdentifier(angleType.metatype))
         }
+    }
+
+    @Test func testInfinityConstantsForAllTypes() {
+        func assertInfinityConstants<T: AAnglable>(_: T.Type) {
+            let positive = T.infinity
+            let negative = T.negativeInfinity
+
+            #expect(positive.rawValue.isInfinite)
+            #expect(positive.rawValue > 0)
+            #expect(negative.rawValue.isInfinite)
+            #expect(negative.rawValue < 0)
+            #expect(positive.description == "+Inf")
+            #expect(negative.description == "-Inf")
+        }
+
+        assertInfinityConstants(Gradians.self)
+        assertInfinityConstants(Degrees.self)
+        assertInfinityConstants(Radians.self)
+        assertInfinityConstants(Revolutions.self)
+        assertInfinityConstants(ArcSeconds.self)
+        assertInfinityConstants(ArcMinutes.self)
     }
 
     @Test func testAAngleTypeCodableRoundTrip() throws {
