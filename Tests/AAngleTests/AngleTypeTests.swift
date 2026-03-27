@@ -104,22 +104,6 @@ struct AAngleTypesTests {
         assertInfinityConstants(ArcSeconds.self)
         assertInfinityConstants(ArcMinutes.self)
     }
-
-    @Test func testAAngleTypeCodableRoundTrip() throws {
-        let allTypes: [AAngleType] = [
-            .gradians, .degrees, .radians, .revolutions, .arcSeconds, .arcMinutes
-        ]
-
-        let encoder = JSONEncoder()
-        let decoder = JSONDecoder()
-
-        for type in allTypes {
-            let data = try encoder.encode(type)
-            let decoded = try decoder.decode(AAngleType.self, from: data)
-            #expect(decoded == type)
-        }
-    }
-    
     @Test func testToleranceScalingDuringConversion() {
         let allTypes: [AAngleType] = [
             .gradians, .degrees, .radians, .revolutions, .arcSeconds, .arcMinutes

@@ -114,5 +114,4 @@ struct ArcSecondsTests {
         #expect(ArcSeconds(648000).isEquivalent(to: Degrees(180)))
         #expect(!ArcSeconds(3600).isEquivalent(to: ArcSeconds(7200), tolerance: 1))
     }
-
 }

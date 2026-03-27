@@ -65,7 +65,50 @@ public protocol AAnglable: Codable, Hashable, ExpressibleByFloatLiteral, Express
     init<T: AAnglable>(_ angle: T)
 }
 
+private enum AAnglableCodingKeys: String, CodingKey {
+    case rawValue
+}
+
+private struct AAnglableAnyCodingKey: CodingKey {
+    var stringValue: String
+    var intValue: Int?
+
+    init?(stringValue: String) {
+        self.stringValue = stringValue
+        self.intValue = nil
+    }
+
+    init?(intValue: Int) {
+        self.stringValue = "\(intValue)"
+        self.intValue = intValue
+    }
+}
+
 extension AAnglable {
+    public init(from decoder: any Decoder) throws {
+        let rawContainer = try decoder.container(keyedBy: AAnglableAnyCodingKey.self)
+        let unexpectedKeys = rawContainer.allKeys.filter {
+            $0.stringValue != AAnglableCodingKeys.rawValue.rawValue
+        }
+        guard unexpectedKeys.isEmpty else {
+            throw DecodingError.dataCorrupted(
+                .init(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Unexpected keys for \(Self.self): \(unexpectedKeys.map(\.stringValue).sorted().joined(separator: ", "))."
+                )
+            )
+        }
+
+        let container = try decoder.container(keyedBy: AAnglableCodingKeys.self)
+        self.init(try container.decode(Double.self, forKey: .rawValue))
+        self.tolerance = Self.defaultTolerance
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: AAnglableCodingKeys.self)
+        try container.encode(rawValue, forKey: .rawValue)
+    }
+
     /// Normalizes the angle by a specified positive value.
     ///
     /// Returns without modification when either operand is non-finite or when `value <= 0`.
