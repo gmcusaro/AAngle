@@ -154,10 +154,14 @@ public extension AAnglable {
 
     /// Sanitizes tolerance values so comparisons stay predictable.
     ///
-    /// - Parameter tolerance: The candidate tolerance value.
-    /// - Returns: A finite non-negative tolerance, clamped to at least `defaultTolerance`.
-    static func sanitizedTolerance(_ tolerance: Double) -> Double {
-        guard tolerance.isFinite, tolerance >= 0 else { return Self.defaultTolerance }
+    /// - Parameter tolerance: An optional override for the comparison tolerance. When `nil`,
+    ///   `defaultTolerance` is used. Non-finite or negative values also fall back to `defaultTolerance`.
+    /// - Returns: `defaultTolerance` when `tolerance` is `nil`, non-finite, or negative;
+    ///   otherwise the provided value clamped to at least `defaultTolerance`.
+    static func sanitizedTolerance(_ tolerance: Double? = nil) -> Double {
+        guard let tolerance, tolerance.isFinite, tolerance >= 0.0 else {
+            return Self.defaultTolerance
+        }
         return Swift.max(tolerance, Self.defaultTolerance)
     }
     
@@ -307,16 +311,13 @@ public extension AAnglable {
     ///
     /// - Parameters:
     ///   - other: The angle to compare against.
-    ///   - tolerance: An optional custom tolerance. When `nil`, the larger sanitized instance tolerance is used.
+    ///   - tolerance: An optional custom tolerance. When `nil`, the sanitized left-hand-side tolerance is used.
     /// - Returns: `true` if the two values differ by no more than the effective tolerance.
     func isApproximatelyEqual<T: AAnglable>(to other: T, tolerance: Double? = nil) -> Bool {
         let otherConverted = other._convert(to: Self.self)
         guard rawValue.isFinite, otherConverted.rawValue.isFinite else { return false }
         let effectiveTolerance = tolerance.map(Self.sanitizedTolerance)
-            ?? Swift.max(
-                Self.sanitizedTolerance(self.tolerance),
-                Self.sanitizedTolerance(otherConverted.tolerance)
-            )
+            ?? Self.sanitizedTolerance(self.tolerance)
         return abs(rawValue - otherConverted.rawValue) <= effectiveTolerance
     }
 
@@ -324,7 +325,7 @@ public extension AAnglable {
     ///
     /// - Parameters:
     ///   - other: The angle to compare against.
-    ///   - tolerance: An optional custom tolerance. When `nil`, the larger sanitized instance tolerance is used.
+    ///   - tolerance: An optional custom tolerance. When `nil`, the sanitized left-hand-side tolerance is used.
     /// - Returns: `true` when the normalized circular distance is within tolerance.
     func isEquivalent<T: AAnglable>(to other: T, tolerance: Double? = nil) -> Bool {
         guard Self.normalizationValue.isFinite, Self.normalizationValue > 0 else { return false }
@@ -332,10 +333,7 @@ public extension AAnglable {
         let rhs = other._convert(to: Self.self).normalized()
         guard lhs.rawValue.isFinite, rhs.rawValue.isFinite else { return false }
         let effectiveTolerance = tolerance.map(Self.sanitizedTolerance)
-            ?? Swift.max(
-                Self.sanitizedTolerance(lhs.tolerance),
-                Self.sanitizedTolerance(rhs.tolerance)
-            )
+            ?? Self.sanitizedTolerance(lhs.tolerance)
         let delta = abs(lhs.rawValue - rhs.rawValue)
         return Swift.min(delta, Self.normalizationValue - delta) <= effectiveTolerance
     }
@@ -958,10 +956,7 @@ public extension AAnglable {
     static func <= <T: AAnglable>(lhs: Self, rhs: T) -> Bool {
         let rhsConverted = rhs._convert(to: Self.self)
         guard lhs.rawValue.isFinite, rhsConverted.rawValue.isFinite else { return false }
-        let effectiveTolerance = Swift.max(
-            Self.sanitizedTolerance(lhs.tolerance),
-            Self.sanitizedTolerance(rhsConverted.tolerance)
-        )
+        let effectiveTolerance = Self.sanitizedTolerance(lhs.tolerance)
         return lhs.rawValue <= rhsConverted.rawValue + effectiveTolerance
     }
 
@@ -1082,10 +1077,7 @@ public extension AAnglable {
     static func >= <T: AAnglable>(lhs: Self, rhs: T) -> Bool {
         let rhsConverted = rhs._convert(to: Self.self)
         guard lhs.rawValue.isFinite, rhsConverted.rawValue.isFinite else { return false }
-        let effectiveTolerance = Swift.max(
-            Self.sanitizedTolerance(lhs.tolerance),
-            Self.sanitizedTolerance(rhsConverted.tolerance)
-        )
+        let effectiveTolerance = Self.sanitizedTolerance(lhs.tolerance)
         return lhs.rawValue >= rhsConverted.rawValue - effectiveTolerance
     }
 

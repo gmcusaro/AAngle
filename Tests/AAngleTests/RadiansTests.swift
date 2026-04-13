@@ -120,4 +120,36 @@ struct RadiansTests {
         #expect(Radians(.pi).isEquivalent(to: Degrees(180)))
         #expect(!Radians(1).isEquivalent(to: Radians(1.1), tolerance: 0.001))
     }
+
+    @Test func testRadiansUsesOnlyLeftHandTolerance() {
+        let delta = 5e-7
+
+        var approximateLHS = Radians(.pi / 2)
+        var approximateRHS = Radians(.pi / 2 + delta)
+        approximateLHS.tolerance = 1e-6
+        approximateRHS.tolerance = 1e-12
+        #expect(approximateLHS.isApproximatelyEqual(to: approximateRHS))
+        #expect(!approximateRHS.isApproximatelyEqual(to: approximateLHS))
+
+        var equivalentLHS = Radians(delta)
+        var equivalentRHS = Radians(0)
+        equivalentLHS.tolerance = 1e-6
+        equivalentRHS.tolerance = 1e-12
+        #expect(equivalentLHS.isEquivalent(to: equivalentRHS))
+        #expect(!equivalentRHS.isEquivalent(to: equivalentLHS))
+
+        var lessThanOrEqualLHS = Radians(.pi / 2 + delta)
+        var lessThanOrEqualRHS = Degrees(90)
+        lessThanOrEqualLHS.tolerance = 1e-6
+        lessThanOrEqualRHS.tolerance = 1e-12
+        #expect(lessThanOrEqualLHS <= lessThanOrEqualRHS)
+        #expect(!(lessThanOrEqualRHS >= lessThanOrEqualLHS))
+
+        var greaterThanOrEqualLHS = Radians(.pi / 2 - delta)
+        var greaterThanOrEqualRHS = Degrees(90)
+        greaterThanOrEqualLHS.tolerance = 1e-6
+        greaterThanOrEqualRHS.tolerance = 1e-12
+        #expect(greaterThanOrEqualLHS >= greaterThanOrEqualRHS)
+        #expect(!(greaterThanOrEqualRHS <= greaterThanOrEqualLHS))
+    }
 }

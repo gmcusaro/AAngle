@@ -29,7 +29,7 @@
 
 **Cross-type correctness:** Comparisons and arithmetic across angle units perform safe internal conversions.
 
-**Robust floating-point comparisons:** Instance tolerances and `sanitizedTolerance(_:)` keep comparisons stable even with invalid values (`NaN`, infinities, negatives).
+**Robust floating-point comparisons:** Left-hand-side tolerances and `sanitizedTolerance(_:)` keep comparisons stable even with invalid values (`NaN`, infinities, negatives).
 
 ### Advantages
 
@@ -205,7 +205,7 @@ var degrees = Degrees(10)
 degrees /= 2  // Result: Degrees(90) (normalized)
 ```
 
-**`==, <, <=, >, >=` Comparison Operators:**  Comparison operators work correctly between `AAnglable` instances of *different* types.  Before comparison, the right-hand side operand is converted to the type of the left-hand side operand.  This ensures consistent and accurate comparisons, regardless of the original units. The comparisons use a tolerance value to account for potential floating-point inaccuracies.
+**`==, <, <=, >, >=` Comparison Operators:**  Comparison operators work correctly between `AAnglable` instances of *different* types. Before comparison, the right-hand side operand is converted to the type of the left-hand side operand. `==` uses the sanitized left-hand-side tolerance, while cross-type `<=` and `>=` use the sanitized left-hand-side tolerance as a comparison margin. `<` and `>` remain strict comparisons after conversion.
 
 ```swift
 let degrees = Degrees(90)
@@ -250,7 +250,7 @@ let normalizedAngle = myAngle.normalized(by: Double.pi) // normalizedAngle is π
 
 ### Tolerance
 
-In `AAnglable`, the default tolerance value is `1e-12`. Each angle instance can override `tolerance` when you need looser or stricter floating-point comparisons.
+In `AAnglable`, the default tolerance value is `1e-12`. Each angle instance can override `tolerance` when you need looser or stricter floating-point comparisons. When no explicit tolerance argument is passed to the helper APIs, the left-hand-side instance tolerance is sanitized and used as the effective tolerance.
 
 ```swift
 print(Degrees.defaultTolerance) // 1e-12
@@ -262,28 +262,31 @@ print(deg1 == deg2)                 // false
 deg1.tolerance = 1e-5               // Set custom tolerance for deg1
 print(deg1.tolerance)               // 1e-5 (different from default 1e-12)
 print(deg1 == deg2)                 // true
+print(deg2 == deg1)                 // false, because deg2 still uses its own tolerance
 ```
 
 ### Sanitized Tolerance
 
 Use `sanitizedTolerance(_:)` to make tolerance values safe before comparison logic:
 
+- `nil` falls back to `defaultTolerance`.
 - Non-finite values (`NaN`, `+/-infinity`) fall back to `defaultTolerance`.
 - Negative values fall back to `defaultTolerance`.
 - Very small positive values are clamped up to `defaultTolerance`.
 
 ```swift
+print(Degrees.sanitizedTolerance())           // 1e-12
 print(Degrees.sanitizedTolerance(.nan))       // 1e-12
 print(Degrees.sanitizedTolerance(-1))         // 1e-12
 print(Degrees.sanitizedTolerance(1e-15))      // 1e-12
 print(Degrees.sanitizedTolerance(1e-5))       // 1e-5
 ```
 
-`AAngle` comparison APIs (`==`, `<`, `<=`, `>=`, `isApproximatelyEqual`, `isEquivalent`) use sanitized tolerance values internally.
+`AAngle` comparison APIs that support tolerance (`==`, cross-type `<=`, cross-type `>=`, `isApproximatelyEqual`, `isEquivalent`) use sanitized tolerance values internally.
 
 ### Comparison Helpers
 
-Use `isApproximatelyEqual(to:tolerance:)` for raw-value closeness checks, and `isEquivalent(to:tolerance:)` for circular equivalence checks (values that differ by full turns).
+Use `isApproximatelyEqual(to:tolerance:)` for raw-value closeness checks, and `isEquivalent(to:tolerance:)` for circular equivalence checks (values that differ by full turns). When `tolerance` is `nil`, both helpers use the sanitized left-hand-side instance tolerance.
 
 ```swift
 let a = Degrees(0)
@@ -292,6 +295,7 @@ let c = Degrees(0.0000000000005)
 
 print(a.isApproximatelyEqual(to: c)) // true (within tolerance)
 print(a.isEquivalent(to: b))          // true (same direction on a circle)
+print(a.isApproximatelyEqual(to: c, tolerance: 1e-9)) // true (explicit override)
 ```
 
 ## Trigonometry

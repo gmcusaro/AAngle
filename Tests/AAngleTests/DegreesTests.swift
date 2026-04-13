@@ -154,4 +154,36 @@ struct DegreesTests {
         #expect(Degrees(0).isEquivalent(to: Revolutions(1)))
         #expect(!Degrees(10).isEquivalent(to: Degrees(20), tolerance: 0.001))
     }
+
+    @Test func testDegreesUsesOnlyLeftHandTolerance() {
+        let delta = 5e-7
+
+        var approximateLHS = Degrees(180)
+        var approximateRHS = Degrees(180 + delta)
+        approximateLHS.tolerance = 1e-6
+        approximateRHS.tolerance = 1e-12
+        #expect(approximateLHS.isApproximatelyEqual(to: approximateRHS))
+        #expect(!approximateRHS.isApproximatelyEqual(to: approximateLHS))
+
+        var equivalentLHS = Degrees(delta)
+        var equivalentRHS = Degrees(0)
+        equivalentLHS.tolerance = 1e-6
+        equivalentRHS.tolerance = 1e-12
+        #expect(equivalentLHS.isEquivalent(to: equivalentRHS))
+        #expect(!equivalentRHS.isEquivalent(to: equivalentLHS))
+
+        var lessThanOrEqualLHS = Degrees(180 + delta)
+        var lessThanOrEqualRHS = Revolutions(0.5)
+        lessThanOrEqualLHS.tolerance = 1e-6
+        lessThanOrEqualRHS.tolerance = 1e-12
+        #expect(lessThanOrEqualLHS <= lessThanOrEqualRHS)
+        #expect(!(lessThanOrEqualRHS >= lessThanOrEqualLHS))
+
+        var greaterThanOrEqualLHS = Degrees(180 - delta)
+        var greaterThanOrEqualRHS = Revolutions(0.5)
+        greaterThanOrEqualLHS.tolerance = 1e-6
+        greaterThanOrEqualRHS.tolerance = 1e-12
+        #expect(greaterThanOrEqualLHS >= greaterThanOrEqualRHS)
+        #expect(!(greaterThanOrEqualRHS <= greaterThanOrEqualLHS))
+    }
 }

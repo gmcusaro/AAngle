@@ -112,4 +112,36 @@ struct ArcMinutesTests {
         #expect(ArcMinutes(10800).isEquivalent(to: Degrees(180)))
         #expect(!ArcMinutes(600).isEquivalent(to: ArcMinutes(900), tolerance: 1))
     }
+
+    @Test func testArcMinutesUsesOnlyLeftHandTolerance() {
+        let delta = 5e-7
+
+        var approximateLHS = ArcMinutes(5400)
+        var approximateRHS = ArcMinutes(5400 + delta)
+        approximateLHS.tolerance = 1e-6
+        approximateRHS.tolerance = 1e-12
+        #expect(approximateLHS.isApproximatelyEqual(to: approximateRHS))
+        #expect(!approximateRHS.isApproximatelyEqual(to: approximateLHS))
+
+        var equivalentLHS = ArcMinutes(delta)
+        var equivalentRHS = ArcMinutes(0)
+        equivalentLHS.tolerance = 1e-6
+        equivalentRHS.tolerance = 1e-12
+        #expect(equivalentLHS.isEquivalent(to: equivalentRHS))
+        #expect(!equivalentRHS.isEquivalent(to: equivalentLHS))
+
+        var lessThanOrEqualLHS = ArcMinutes(5400 + delta)
+        var lessThanOrEqualRHS = Degrees(90)
+        lessThanOrEqualLHS.tolerance = 1e-6
+        lessThanOrEqualRHS.tolerance = 1e-12
+        #expect(lessThanOrEqualLHS <= lessThanOrEqualRHS)
+        #expect(!(lessThanOrEqualRHS >= lessThanOrEqualLHS))
+
+        var greaterThanOrEqualLHS = ArcMinutes(5400 - delta)
+        var greaterThanOrEqualRHS = Degrees(90)
+        greaterThanOrEqualLHS.tolerance = 1e-6
+        greaterThanOrEqualRHS.tolerance = 1e-12
+        #expect(greaterThanOrEqualLHS >= greaterThanOrEqualRHS)
+        #expect(!(greaterThanOrEqualRHS <= greaterThanOrEqualLHS))
+    }
 }

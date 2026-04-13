@@ -118,4 +118,36 @@ struct GradiansTests {
         #expect(Gradians(100).isEquivalent(to: Degrees(90)))
         #expect(!Gradians(10).isEquivalent(to: Gradians(20), tolerance: 0.001))
     }
+
+    @Test func testGradiansUsesOnlyLeftHandTolerance() {
+        let delta = 5e-7
+
+        var approximateLHS = Gradians(100)
+        var approximateRHS = Gradians(100 + delta)
+        approximateLHS.tolerance = 1e-6
+        approximateRHS.tolerance = 1e-12
+        #expect(approximateLHS.isApproximatelyEqual(to: approximateRHS))
+        #expect(!approximateRHS.isApproximatelyEqual(to: approximateLHS))
+
+        var equivalentLHS = Gradians(delta)
+        var equivalentRHS = Gradians(0)
+        equivalentLHS.tolerance = 1e-6
+        equivalentRHS.tolerance = 1e-12
+        #expect(equivalentLHS.isEquivalent(to: equivalentRHS))
+        #expect(!equivalentRHS.isEquivalent(to: equivalentLHS))
+
+        var lessThanOrEqualLHS = Gradians(100 + delta)
+        var lessThanOrEqualRHS = Degrees(90)
+        lessThanOrEqualLHS.tolerance = 1e-6
+        lessThanOrEqualRHS.tolerance = 1e-12
+        #expect(lessThanOrEqualLHS <= lessThanOrEqualRHS)
+        #expect(!(lessThanOrEqualRHS >= lessThanOrEqualLHS))
+
+        var greaterThanOrEqualLHS = Gradians(100 - delta)
+        var greaterThanOrEqualRHS = Degrees(90)
+        greaterThanOrEqualLHS.tolerance = 1e-6
+        greaterThanOrEqualRHS.tolerance = 1e-12
+        #expect(greaterThanOrEqualLHS >= greaterThanOrEqualRHS)
+        #expect(!(greaterThanOrEqualRHS <= greaterThanOrEqualLHS))
+    }
 }

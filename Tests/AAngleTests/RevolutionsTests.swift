@@ -127,4 +127,36 @@ struct RevolutionsTests {
         #expect(Revolutions(0.5).isEquivalent(to: Degrees(180)))
         #expect(!Revolutions(0.1).isEquivalent(to: Revolutions(0.2), tolerance: 0.001))
     }
+
+    @Test func testRevolutionsUsesOnlyLeftHandTolerance() {
+        let delta = 5e-7
+
+        var approximateLHS = Revolutions(0.25)
+        var approximateRHS = Revolutions(0.25 + delta)
+        approximateLHS.tolerance = 1e-6
+        approximateRHS.tolerance = 1e-12
+        #expect(approximateLHS.isApproximatelyEqual(to: approximateRHS))
+        #expect(!approximateRHS.isApproximatelyEqual(to: approximateLHS))
+
+        var equivalentLHS = Revolutions(delta)
+        var equivalentRHS = Revolutions(0)
+        equivalentLHS.tolerance = 1e-6
+        equivalentRHS.tolerance = 1e-12
+        #expect(equivalentLHS.isEquivalent(to: equivalentRHS))
+        #expect(!equivalentRHS.isEquivalent(to: equivalentLHS))
+
+        var lessThanOrEqualLHS = Revolutions(0.25 + delta)
+        var lessThanOrEqualRHS = Degrees(90)
+        lessThanOrEqualLHS.tolerance = 1e-6
+        lessThanOrEqualRHS.tolerance = 1e-12
+        #expect(lessThanOrEqualLHS <= lessThanOrEqualRHS)
+        #expect(!(lessThanOrEqualRHS >= lessThanOrEqualLHS))
+
+        var greaterThanOrEqualLHS = Revolutions(0.25 - delta)
+        var greaterThanOrEqualRHS = Degrees(90)
+        greaterThanOrEqualLHS.tolerance = 1e-6
+        greaterThanOrEqualRHS.tolerance = 1e-12
+        #expect(greaterThanOrEqualLHS >= greaterThanOrEqualRHS)
+        #expect(!(greaterThanOrEqualRHS <= greaterThanOrEqualLHS))
+    }
 }
