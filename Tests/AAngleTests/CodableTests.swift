@@ -4,27 +4,22 @@ import Testing
 
 @Suite("Codable Tests")
 struct CodableTests {
-    @Test func testDegreesDecode() throws {
-        let decoder = JSONDecoder()
-        let json = """
-        {
-          "rawValue": 0.25
-        }
-        """.data(using: .utf8)!
-
-        let decoded = try decoder.decode(Degrees.self, from: json)
-        #expect(decoded.rawValue == 0.25)
-        #expect(decoded.tolerance == Degrees.defaultTolerance)
+    @Test func testAngleDecodeForAllTypes() throws {
+        try assertAngleDecode(Gradians.self)
+        try assertAngleDecode(Degrees.self)
+        try assertAngleDecode(Radians.self)
+        try assertAngleDecode(Revolutions.self)
+        try assertAngleDecode(ArcSeconds.self)
+        try assertAngleDecode(ArcMinutes.self)
     }
 
-    @Test func testDegreesEncode() throws {
-        let encoder = JSONEncoder()
-        var value = Degrees(0.25)
-        value.tolerance = 1e-6
-
-        let encoded = try encoder.encode(value)
-        let json = try #require(String(data: encoded, encoding: .utf8))
-        #expect(json == #"{"rawValue":0.25}"#)
+    @Test func testAngleEncodeForAllTypes() throws {
+        try assertAngleEncode(Gradians.self)
+        try assertAngleEncode(Degrees.self)
+        try assertAngleEncode(Radians.self)
+        try assertAngleEncode(Revolutions.self)
+        try assertAngleEncode(ArcSeconds.self)
+        try assertAngleEncode(ArcMinutes.self)
     }
 
     @Test func testAAngleTypeDecode() throws {
@@ -62,7 +57,50 @@ struct CodableTests {
         }
     }
 
-    @Test func testAAngleDecode() throws {
+    @Test func testAAngleDecodeForAllTypes() throws {
+        try assertAAngleDecode(Gradians.self)
+        try assertAAngleDecode(Degrees.self)
+        try assertAAngleDecode(Radians.self)
+        try assertAAngleDecode(Revolutions.self)
+        try assertAAngleDecode(ArcSeconds.self)
+        try assertAAngleDecode(ArcMinutes.self)
+    }
+
+    @Test func testAAngleEncodeForAllTypes() throws {
+        try assertAAngleEncode(Gradians.self)
+        try assertAAngleEncode(Degrees.self)
+        try assertAAngleEncode(Radians.self)
+        try assertAAngleEncode(Revolutions.self)
+        try assertAAngleEncode(ArcSeconds.self)
+        try assertAAngleEncode(ArcMinutes.self)
+    }
+}
+
+private extension CodableTests {
+    func assertAngleDecode<T: AAnglable>(_: T.Type) throws {
+        let decoder = JSONDecoder()
+        let json = """
+        {
+          "rawValue": 0.25
+        }
+        """.data(using: .utf8)!
+
+        let decoded = try decoder.decode(T.self, from: json)
+        #expect(decoded.rawValue == 0.25)
+        #expect(decoded.tolerance == T.defaultTolerance)
+    }
+
+    func assertAngleEncode<T: AAnglable>(_: T.Type) throws {
+        let encoder = JSONEncoder()
+        var value = T(0.25)
+        value.tolerance = 1e-6
+
+        let encoded = try encoder.encode(value)
+        let json = try #require(String(data: encoded, encoding: .utf8))
+        #expect(json == #"{"rawValue":0.25}"#)
+    }
+
+    func assertAAngleDecode<T: AAnglable>(_: T.Type) throws {
         let decoder = JSONDecoder()
         let json = """
         {
@@ -72,17 +110,18 @@ struct CodableTests {
         }
         """.data(using: .utf8)!
 
-        let degrees = try decoder.decode(AAngle<Degrees>.self, from: json)
-        #expect(degrees.wrappedValue.rawValue == 0.25)
-        #expect(degrees.wrappedValue.tolerance == Degrees.defaultTolerance)
+        let decoded = try decoder.decode(AAngle<T>.self, from: json)
+        #expect(decoded.wrappedValue.rawValue == 0.25)
+        #expect(decoded.wrappedValue.tolerance == T.defaultTolerance)
     }
 
-    @Test func testAAngleEncode() throws {
+    func assertAAngleEncode<T: AAnglable>(_: T.Type) throws {
         let encoder = JSONEncoder()
+        var value = T(0.25)
+        value.tolerance = 1e-6
 
-        var degreesValue = Degrees(0.25)
-        degreesValue.tolerance = 1e-6
-        let degrees = try encoder.encode(AAngle(wrappedValue: degreesValue))
-        #expect(try #require(String(data: degrees, encoding: .utf8)) == #"{"wrappedValue":{"rawValue":0.25}}"#)
+        let encoded = try encoder.encode(AAngle<T>(wrappedValue: value))
+        let json = try #require(String(data: encoded, encoding: .utf8))
+        #expect(json == #"{"wrappedValue":{"rawValue":0.25}}"#)
     }
 }
